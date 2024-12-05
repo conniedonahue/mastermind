@@ -1,51 +1,15 @@
+/* General styles */
 body {
   font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
 }
+
 .container {
   margin: 20px;
 }
-input[type="text"] {
-  width: 150px;
-  padding: 5px;
-}
-.feedback {
-  margin-top: 20px;
-}
-.error {
-  color: red;
-}
-label {
-  display: block;
-  margin-bottom: 10px;
-}
 
-/* Style for the options box */
-.options-box {
-  border: 2px solid #007bff;
-  border-radius: 10px;
-  padding: 20px;
-  background-color: #f9f9f9;
-  margin-top: 20px;
-  width: 300px;
-}
-
-.options-box h2 {
-  margin-bottom: 15px;
-  font-size: 20px;
-  color: #007bff;
-}
-
-.options-box select,
-.options-box input[type="checkbox"] {
-  margin-bottom: 10px;
-}
-
-.options-box label {
-  margin-bottom: 10px;
-}
-
-.options-box button {
-  margin-top: 15px;
+button {
   padding: 10px 20px;
   background-color: #007bff;
   color: white;
@@ -54,20 +18,74 @@ label {
   cursor: pointer;
 }
 
-.options-box button:hover {
+button:hover {
   background-color: #0056b3;
 }
 
-.container {
-  margin: 20px;
+label {
+  display: block;
+  margin-bottom: 10px;
 }
-input[type="text"] {
-  width: 150px;
+
+hr {
+  border: 1px solid #ccc;
+  margin: 20px 0;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Welcome Page */
+.center-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+}
+
+.settings-header {
+  margin-bottom: 0.5rem;
+}
+
+.options-box {
+  border: 2px solid #007bff;
+  border-radius: 10px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  width: 300px;
+}
+
+/* Game Page */
+.game-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.guess-section {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 20px;
+}
+
+.results-section {
+  width: 100%;
+  max-width: 400px;
+}
+
+.results-box {
+  border: 2px solid #007bff;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  min-height: 150px;
+  text-align: center;
+}
+
+.results-box p {
+  margin: 0;
   padding: 5px;
-}
-.feedback {
-  margin-top: 20px;
-}
-.error {
-  color: red;
 }

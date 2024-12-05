@@ -1,41 +1,61 @@
-{% extends 'base.html' %} {% block head %} {% endblock %} {% block body %}
+{% extends 'base.html' %} {% block body %}
 
-<div class="container">
-  <h1>Mastermind Game</h1>
+<div class="container game-layout">
+  <h1 class="text-center">Mastermind Game</h1>
+  <hr/>
 
   <!-- Display error message if any -->
   {% if error_message %}
   <div class="error">{{ error_message }}</div>
   {% endif %}
 
-  <form method="POST" action="/guess">
-    <label for="guessInput"
-      >Enter your guess (4 numbers between 0 and 7):
-    </label>
-    <input
-      type="text"
-      id="guessInput"
-      name="guess"
-      placeholder="e.g., 1 3 5 7"
-      required
-    />
-    <button type="submit">Submit Guess</button>
-  </form>
+  <!-- Left Section -->
+  <div class="guess-section">
+    <h2>Enter Your Guess</h2>
+    <form method="POST" action="/guess">
+      <label for="guessInput">4 numbers between 0 and 7:</label>
+      <input
+        type="text"
+        id="guessInput"
+        name="guess"
+        placeholder="e.g., 1 3 5 7"
+        required
+      />
+      <button type="submit">Submit Guess</button>
+    </form>
+    {% if remaining_guesses is not none %}
+    <div>Guesses remaining: <strong>{{ remaining_guesses }}</strong></div>
+    {% endif %}
+  </div>
 
-  {% if feedback %}
-  <div class="feedback">{{ feedback }}</div>
-  {% endif %} {% if remaining_guesses is not none %}
-  <div>Guesses remaining: {{ remaining_guesses }}</div>
+  <!-- Right Section -->
+  <div class="results-section">
+    <h2>Results</h2>
+    <div class="results-box">
+      {% if feedback %}
+      <p>{{ feedback }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Two-player game -->
+  {% if is_two_player %}
+  <h3>{{ other_player_name }}'s Results</h3>
+  <div class="results-box">
+    {% for result in other_feedback %}
+    <p>{{ result }}</p>
+    {% endfor %}
+  </div>
   {% endif %}
 </div>
-<script>
+<!-- <script>
   document.querySelector("form").addEventListener("submit", function (event) {
     event.preventDefault();
 
-    const guessInput = document.querySelector("#guessInput").value;
-    const guess = guessInput.split(" ").map(Number);
+    const guessInput = document.querySelector("#guessInput").value.trim();
+    const guess = guessInput.split(/\s+/).map(Number); // Split by spaces, then convert to numbers
 
-    // Validates
+    // Validate guess
     if (
       guess.length !== 4 ||
       guess.some((num) => num < 0 || num > 7 || isNaN(num))
@@ -44,27 +64,21 @@
       return;
     }
 
+    // Submit the guess
     fetch("/guess", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ guess: guess }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guess }),
     })
-      .then((response) => {
-        console.log("response: ", response);
-        return response.json();
-      })
+      .then((response) => response.json())
       .then((data) => {
-        if (data.message) {
-          alert(data.message);
-        } else if (data.error) {
+        if (data.error) {
           alert(data.error);
+        } else {
+          location.reload(); // Reload to see updated results
         }
       })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+      .catch((error) => console.error("Error:", error));
   });
-</script>
+</script> -->
 {% endblock %}
