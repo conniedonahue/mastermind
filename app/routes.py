@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, session
+from flask import Blueprint, request, jsonify, render_template, session, redirect, url_for
 from .game_logic import generate_code, evaluate_guess
 game_routes = Blueprint('game_routes', __name__)
 
