@@ -1,59 +1,73 @@
 body {
-    font-family: Arial, sans-serif;
-  }
-  .container {
-    margin: 20px;
-  }
-  input[type="text"] {
-    width: 150px;
-    padding: 5px;
-  }
-  .feedback {
-    margin-top: 20px;
-  }
-  .error {
-    color: red;
-  }
-  label {
-    display: block;
-    margin-bottom: 10px;
-  }
+  font-family: Arial, sans-serif;
+}
+.container {
+  margin: 20px;
+}
+input[type="text"] {
+  width: 150px;
+  padding: 5px;
+}
+.feedback {
+  margin-top: 20px;
+}
+.error {
+  color: red;
+}
+label {
+  display: block;
+  margin-bottom: 10px;
+}
 
-  /* Style for the options box */
-  .options-box {
-    border: 2px solid #007bff;
-    border-radius: 10px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    margin-top: 20px;
-    width: 300px;
-  }
+/* Style for the options box */
+.options-box {
+  border: 2px solid #007bff;
+  border-radius: 10px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  margin-top: 20px;
+  width: 300px;
+}
 
-  .options-box h2 {
-    margin-bottom: 15px;
-    font-size: 20px;
-    color: #007bff;
-  }
+.options-box h2 {
+  margin-bottom: 15px;
+  font-size: 20px;
+  color: #007bff;
+}
 
-  .options-box select,
-  .options-box input[type="checkbox"] {
-    margin-bottom: 10px;
-  }
+.options-box select,
+.options-box input[type="checkbox"] {
+  margin-bottom: 10px;
+}
 
-  .options-box label {
-    margin-bottom: 10px;
-  }
+.options-box label {
+  margin-bottom: 10px;
+}
 
-  .options-box button {
-    margin-top: 15px;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
+.options-box button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
 
-  .options-box button:hover {
-    background-color: #0056b3;
-  }
+.options-box button:hover {
+  background-color: #0056b3;
+}
+
+.container {
+  margin: 20px;
+}
+input[type="text"] {
+  width: 150px;
+  padding: 5px;
+}
+.feedback {
+  margin-top: 20px;
+}
+.error {
+  color: red;
+}

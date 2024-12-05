@@ -1,6 +1,6 @@
 import requests
 
-def generate_code():
+def generate_code(code_length=4):
     """Fetches a random 4-digit code ( between 0 and 7) using Random.org API."""
     url = "https://www.random.org/integers"
     params = {

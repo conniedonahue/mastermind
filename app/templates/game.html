@@ -1,97 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mastermind Game</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-      }
-      .container {
-        margin: 20px;
-      }
-      input[type="text"] {
-        width: 150px;
-        padding: 5px;
-      }
-      .feedback {
-        margin-top: 20px;
-      }
-      .error {
-        color: red;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Mastermind Game</h1>
+{% extends 'base.html' %} {% block head %} {% endblock %} {% block body %}
 
-      <!-- Display error message if any -->
-      {% if error_message %}
-      <div class="error">{{ error_message }}</div>
-      {% endif %}
+<div class="container">
+  <h1>Mastermind Game</h1>
 
-      <form method="POST" action="/guess">
-        <label for="guessInput"
-          >Enter your guess (4 numbers between 0 and 7):
-        </label>
-        <input
-          type="text"
-          id="guessInput"
-          name="guess"
-          placeholder="e.g., 1 3 5 7"
-          required
-        />
-        <button type="submit">Submit Guess</button>
-      </form>
+  <!-- Display error message if any -->
+  {% if error_message %}
+  <div class="error">{{ error_message }}</div>
+  {% endif %}
 
-      {% if feedback %}
-      <div class="feedback">{{ feedback }}</div>
-      {% endif %} {% if remaining_guesses is not none %}
-      <div>Guesses remaining: {{ remaining_guesses }}</div>
-      {% endif %}
-    </div>
-    <script>
-      document
-        .querySelector("form")
-        .addEventListener("submit", function (event) {
-          event.preventDefault();
+  <form method="POST" action="/guess">
+    <label for="guessInput"
+      >Enter your guess (4 numbers between 0 and 7):
+    </label>
+    <input
+      type="text"
+      id="guessInput"
+      name="guess"
+      placeholder="e.g., 1 3 5 7"
+      required
+    />
+    <button type="submit">Submit Guess</button>
+  </form>
 
-          const guessInput = document.querySelector("#guessInput").value;
-          const guess = guessInput.split(" ").map(Number);
+  {% if feedback %}
+  <div class="feedback">{{ feedback }}</div>
+  {% endif %} {% if remaining_guesses is not none %}
+  <div>Guesses remaining: {{ remaining_guesses }}</div>
+  {% endif %}
+</div>
+<script>
+  document.querySelector("form").addEventListener("submit", function (event) {
+    event.preventDefault();
 
-          // Validates
-          if (
-            guess.length !== 4 ||
-            guess.some((num) => num < 0 || num > 7 || isNaN(num))
-          ) {
-            alert("Please enter exactly 4 numbers between 0 and 7.");
-            return;
-          }
+    const guessInput = document.querySelector("#guessInput").value;
+    const guess = guessInput.split(" ").map(Number);
 
-          fetch("/guess", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ guess: guess }),
-          })
-            .then((response) => {
-              console.log("response: ", response);
-              return response.json();
-            })
-            .then((data) => {
-              if (data.message) {
-                alert(data.message);
-              } else if (data.error) {
-                alert(data.error);
-              }
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-            });
-        });
-    </script>
-  </body>
-</html>
+    // Validates
+    if (
+      guess.length !== 4 ||
+      guess.some((num) => num < 0 || num > 7 || isNaN(num))
+    ) {
+      alert("Please enter exactly 4 numbers between 0 and 7.");
+      return;
+    }
+
+    fetch("/guess", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ guess: guess }),
+    })
+      .then((response) => {
+        console.log("response: ", response);
+        return response.json();
+      })
+      .then((data) => {
+        if (data.message) {
+          alert(data.message);
+        } else if (data.error) {
+          alert(data.error);
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  });
+</script>
+{% endblock %}

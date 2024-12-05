@@ -1,105 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mastermind Game</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-      }
-      .container {
-        margin: 20px;
-      }
-      input[type="text"] {
-        width: 150px;
-        padding: 5px;
-      }
-      .feedback {
-        margin-top: 20px;
-      }
-      .error {
-        color: red;
-      }
-      label {
-        display: block;
-        margin-bottom: 10px;
-      }
+{% extends 'base.html' %} {% block head %} {% endblock %} {% block body %}
+<div class="container">
+  <h1>Mastermind Game</h1>
 
-      /* Style for the options box */
-      .options-box {
-        border: 2px solid #007bff;
-        border-radius: 10px;
-        padding: 20px;
-        background-color: #f9f9f9;
-        margin-top: 20px;
-        width: 300px;
-      }
+  <!-- Welcome screen with options -->
+  <form method="POST" action="/start_game">
+    <div class="options-box">
+      <h2>Game Settings</h2>
 
-      .options-box h2 {
-        margin-bottom: 15px;
-        font-size: 20px;
-        color: #007bff;
-      }
+      <!-- Number of allowed attempts -->
+      <label for="attempts">Allowed attempts:</label>
+      <select id="attempts" name="attempts">
+        <option value="10" selected>10</option>
+        <option value="15">15</option>
+        <option value="20">20</option>
+      </select>
 
-      .options-box select,
-      .options-box input[type="checkbox"] {
-        margin-bottom: 10px;
-      }
+      <!-- Number of digits in the codeword -->
+      <label for="code_length">Number of digits in codeword:</label>
+      <select id="code_length" name="code_length">
+        <option value="4" selected>4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+      </select>
 
-      .options-box label {
-        margin-bottom: 10px;
-      }
+      <!-- Wordle-ify checkbox -->
+      <label for="wordle_ify">
+        <input type="checkbox" id="wordle_ify" name="wordle_ify" />
+        Wordle-ify (use colors for feedback)
+      </label>
 
-      .options-box button {
-        margin-top: 15px;
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-      }
-
-      .options-box button:hover {
-        background-color: #0056b3;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Mastermind Game</h1>
-
-      <!-- Welcome screen with options -->
-      <form method="POST" action="/start_game">
-        <div class="options-box">
-          <h2>Game Settings</h2>
-
-          <!-- Number of allowed attempts -->
-          <label for="attempts">Allowed attempts:</label>
-          <select id="attempts" name="attempts">
-            <option value="10" selected>10</option>
-            <option value="15">15</option>
-            <option value="20">20</option>
-          </select>
-
-          <!-- Number of digits in the codeword -->
-          <label for="code_length">Number of digits in codeword:</label>
-          <select id="code_length" name="code_length">
-            <option value="4" selected>4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-          </select>
-
-          <!-- Wordle-ify checkbox -->
-          <label for="wordle_ify">
-            <input type="checkbox" id="wordle_ify" name="wordle_ify" />
-            Wordle-ify (use colors for feedback)
-          </label>
-
-          <button type="submit">Start Game</button>
-        </div>
-      </form>
+      <button type="submit">Start Game</button>
     </div>
-  </body>
-</html>
+  </form>
+</div>
+{% endblock %}
