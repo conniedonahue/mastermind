@@ -29,7 +29,7 @@ def create_game():
             'allowed_attempts': allowed_attempts,
             'code_length': code_length,
             'wordleify': wordleify,
-            'code': code,
+            'code': [1234],
         },
         'state': {
             'status': "active",
@@ -59,40 +59,22 @@ def render_game_page(session_id):
         return "Session not found", 404
     return render_template('game.html', session_id="session")
 
-# @game_routes.route('/game.html')
-# def game_page():
-#     return render_template('play_game.html')
-
-# @game_routes.route('/play_game', methods=['GET'])
-# def play_game():
-#     cache = current_app.cache
-#     session_data = cache.get()
-#     remaining_guesses=session.get('remaining_guesses', 0)
-#     code_length=session.get('code_length', 4)
-#     wordleify=session.get('wordleify', False)
-
-#     # return render_template('game.html', remaining_guesses=remaining_guesses)
-
-#     return jsonify({
-#         'game_state': {
-#             'remaining_guesses': remaining_guesses,
-#             'code_length': code_length,
-#             'wordleify': wordleify,
-#             'guesses': session.get('guesses', [])
-#         }
-#     }), 200
 
 @game_routes.route('/game/<session_id>', methods=['POST'])
 def guess(session_id):
+    print("sessionID in guess: ", session_id)
     cache = current_app.cache
+    print('guessRequest: ', request.form)
     try:
         # Extract guess input and clean/validate it
         raw_guess = request.form.get('guess', '').strip()
         print("raw_guess: ", raw_guess)
-        code = cache.get_code_by_session_id(session_id)
-        print("code")
-        remaining_guesses = session.get('remaining_guesses', 0)
-        print('remaining')
+        session = cache.get_session(session_id)
+        print("session: ", session)
+        # code = session['config']['code']
+        # print('code: ', code)
+        # remaining_guesses = session.get('remaining_guesses', 0)
+        # print('remaining')
 
         # Clean input (e.g., remove spaces, split digits)
         guess = clean_and_validate_guess(raw_guess, session["code_length"])

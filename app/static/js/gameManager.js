@@ -104,7 +104,7 @@ class GameManager {
 
   async submitGuess(guess) {
     try {
-      const response = await fetch("/game/guess", {
+      const response = await fetch(`/game/${this.sessionId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
