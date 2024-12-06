@@ -21,15 +21,32 @@ def create_game():
     session['code_length'] = code_length
     session['wordleify'] = wordleify
     session['guesses'] = []
+    session['status'] = 'active'
 
-    return redirect(url_for('game_routes.play_game'))
+    return jsonify({
+        'message': 'Game created successfully!',
+        'game_state': {
+            'remaining_guesses': allowed_attempts,
+            'code_length': code_length,
+            'wordleify': wordleify,
+            'status': session.get('status')
+        }
+    }), 201  
 
 @game_routes.route('/play_game', methods=['GET'])
 def play_game():
-    return render_template('game.html', 
-    remaining_guesses=session.get('remaining_guesses', 0), 
-    code_length=session.get('code_length', 4), 
-    wordleify=session.get('wordleify', False))
+    remaining_guesses=session.get('remaining_guesses', 0)
+    code_length=session.get('code_length', 4)
+    wordleify=session.get('wordleify', False)
+
+    return jsonify({
+        'game_state': {
+            'remaining_guesses': remaining_guesses,
+            'code_length': code_length,
+            'wordleify': wordleify,
+            'guesses': session.get('guesses', [])
+        }
+    }), 200
 
 @game_routes.route('/guess', methods=['POST'])
 def guess():
@@ -61,18 +78,24 @@ def guess():
 
         # Check win/loss conditions
         if correct_positions == len(code):
-            flash("Congratulations! You've guessed the code!")
-            return redirect(url_for('game_routes.create_game'))
+            session['status'] = 'won'
 
         if session['remaining_guesses'] <= 0:
-            flash(f"Game over! The correct code was {''.join(map(str, code))}.")
-            return redirect(url_for('game_routes.create_game'))
+            session['status'] = 'lost'
 
         print("about to redirect!")
         # Continue game
-        return redirect(url_for('game_routes.create_game'))
+        return jsonify({
+            'game_state': {
+                'remaining_guesses': session['remaining_guesses'],
+                'guesses': session['guesses'],
+                'status': session['status']
+            }
+        }), 200
 
     except ValueError as e:
-        flash(str(e))
-        return redirect(url_for('game_routes.create_game'))
+        # flash(str(e))
+        return jsonify({
+            'error': str(e)
+        }), 400
 
