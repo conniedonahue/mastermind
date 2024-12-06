@@ -1,85 +1,46 @@
 {% extends 'base.html' %} {% block body %}
-<div class="container game-layout">
-  <h1 class="text-center">Mastermind Game</h1>
+<div id="game-container" class="container game-layout">
+  <h1 id="mastermind-game" class="text-center">Mastermind Game</h1>
+
   <hr />
 
-  <!-- Display error message if any -->
   {% if error_message %}
   <div class="error">{{ error_message }}</div>
   {% endif %}
 
-  <!-- Left Section -->
   <div class="guess-section">
     <h2>Enter Your Guess</h2>
-    <form id="guessForm">
-      <label for="guessInput">4 numbers between 0 and 7:</label>
+
+    <form id="guess-form">
+      <label for="guess-input"
+        >{{ code_length }} numbers between 0 and 7:</label
+      >
       <input
         type="text"
-        id="guessInput"
+        id="guess-input"
         name="guess"
-        placeholder="e.g., 1 3 5 7"
         required
+        pattern="[0-7]{4}"
+        title="Enter exactly {{ code_length }} digits between 0 and 7"
       />
       <button type="submit">Submit Guess</button>
     </form>
+
     {% if remaining_guesses is not none %}
-    <div>Guesses remaining: <strong>{{ remaining_guesses }}</strong></div>
+    <div class="game-info">
+      Guesses remaining:
+      <span id="remaining-guesses">{{ remaining_guesses }}</span>
+    </div>
     {% endif %}
   </div>
 
-  <!-- Right Section -->
   <div class="results-section">
     <h2>Results</h2>
-    <div class="results-box">
-      {% if feedback %}
-      <p>{{ feedback }}</p>
-      {% endif %}
+    <div id="guess-history" class="results-box">
+      <!-- Guess results will be dynamically populated here -->
     </div>
   </div>
 </div>
-<script>
-  document
-    .getElementById("guessForm")
-    .addEventListener("submit", function (event) {
-      event.preventDefault();
 
-      const guessInput = document.querySelector("#guessInput").value.trim();
-      const guess = guessInput.split(/\s+/).map(Number); // Split by spaces, then convert to numbers
-
-      // Validate guess
-      if (
-        guess.length !== 4 ||
-        guess.some((num) => num < 0 || num > 7 || isNaN(num))
-      ) {
-        alert("Please enter exactly 4 numbers between 0 and 7.");
-        return;
-      }
-
-      // Submit the guess via fetch
-      fetch("/guess", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          guess: guess.join(" "),
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.error) {
-            alert(data.error);
-          } else {
-            // Update UI with the new game state
-            alert(`Guess submitted! ${data.game_state.status}`);
-            // Update remaining guesses and feedback
-            document.querySelector(
-              ".results-box"
-            ).innerHTML = `Guesses remaining: ${data.game_state.remaining_guesses}`;
-          }
-        })
-        .catch((error) => console.error("Error:", error));
-    });
-</script>
-
+<script src="{{ url_for('static', filename='js/gameManager.js') }}"></script>
 {% endblock %}

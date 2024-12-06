@@ -2,69 +2,39 @@
 <div class="container center-screen">
   <h1>Mastermind Game</h1>
 
-  <h3 class="settings-header">Game Settings:</h3>
-  <!-- Welcome screen with options -->
-  <form id="createGameForm">
-    <div class="options-box">
-      <!-- Number of allowed attempts -->
-      <label for="attempts">Allowed attempts:</label>
-      <select id="attempts" name="attempts">
-        <option value="10" selected>10</option>
-        <option value="15">15</option>
-        <option value="20">20</option>
-      </select>
+  <h3 id="game-settings" class="settings-header">Game Settings:</h3>
 
-      <!-- Number of digits in the codeword -->
-      <label for="code_length">Number of digits in codeword:</label>
-      <select id="code_length" name="code_length">
-        <option value="4" selected>4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-      </select>
+  <div class="options-box">
+    <form id="game-settings-form">
+      <div>
+        <label for="allowed_attempts">Allowed attempts:</label>
+        <select id="allowed_attempts" name="allowed_attempts">
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select>
+      </div>
 
-      <!-- Wordle-ify checkbox -->
-      <label for="wordle_ify">
-        <input type="checkbox" id="wordle_ify" name="wordle_ify" />
-        Wordle-ify (use colors for feedback)
-      </label>
+      <div>
+        <label for="code_length">Number of digits in codeword:</label>
+        <select id="code_length" name="code_length">
+          <option value="4" selected>4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+      </div>
 
-      <button type="submit">Start Game</button>
-    </div>
-  </form>
+      <div>
+        <label for="wordle_ify">
+          <input type="checkbox" id="wordle_ify" name="wordle_ify" />
+          Wordle-ify (use colors for feedback)
+        </label>
+      </div>
+
+      <button type="submit" id="start-game-btn">Start Game</button>
+    </form>
+  </div>
 </div>
 
-<script>
-  document
-    .getElementById("createGameForm")
-    .addEventListener("submit", function (event) {
-      event.preventDefault();
-
-      const formData = new FormData(event.target);
-      const data = new URLSearchParams();
-
-      formData.forEach((value, key) => {
-        data.append(key, value);
-      });
-
-      // Make a POST request to the backend to create the game
-      fetch("/create_game", {
-        method: "POST",
-        body: data,
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("data: ", data);
-          if (data.status === "success") {
-            console.log("Game created successfully. Redirecting...");
-            window.location.href = "./play_game";
-          } else {
-            // Handle error or failure (optional)
-            alert(data.message || "Error creating game.");
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-        });
-    });
-</script>
+<script src="{{ url_for('static', filename='js/gameManager.js') }}"></script>
 {% endblock %}

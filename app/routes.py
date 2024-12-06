@@ -1,18 +1,42 @@
 from flask import Blueprint, request, jsonify, render_template, session, redirect, url_for, flash
 from .game_logic import generate_code, evaluate_guess, clean_and_validate_guess
+from db.cache.development import Cache
+import uuid
+
 game_routes = Blueprint('game_routes', __name__)
+sessions_routes = Blueprint('sessions', __name__)
+
+@sessions.route('/sessions', methods=['POST'])
+def create_session():
+    data = request.json
+    session_id = str(uuid.uuid4())
+    Cache.create_session(session_id, {
+        "gameType": data.get("gameType"),
+        "players": [{"id": data["hostPlayer"]["id"], "name": data["hostPlayer"]["name"]}],
+        "status": "waiting_for_players"
+    })
+    return jsonify({"sessionId": session_id, "joinLink": f"https://example.com/sessions/{session_id}"})
 
 @game_routes.route('/')
 def home():
     return render_template('welcome.html')
 
-@game_routes.route('/create_game', methods=['POST'])
+@game_routes.route('/game/<session_id>')
+def render_game_page():
+    session_data = Cache.get_session(session_id)
+    if not session_data:
+        return "Session not found", 404
+    return render_template('game.html', session_id="session")
+
+@game_routes.route('/game', methods=['POST'])
 def create_game():
+    print('In router')
     # Extract data from the request
     allowed_attempts = int(request.form.get('allowed_attempts', 10))
     code_length = int(request.form.get('code_length', 4))
     wordleify = request.form.get('wordleify') is not None
     code = generate_code(code_length)
+
 
     # Initialize session
     session['code'] = code
@@ -25,8 +49,8 @@ def create_game():
 
     return jsonify({
         'message': 'Game created successfully!',
-        'status': 'success',
         'game_state': {
+            'game_id': '1111',
             'remaining_guesses': allowed_attempts,
             'code_length': code_length,
             'wordleify': wordleify,
@@ -44,16 +68,16 @@ def play_game():
     code_length=session.get('code_length', 4)
     wordleify=session.get('wordleify', False)
 
-    return render_template('game.html', remaining_guesses=remaining_guesses)
+    # return render_template('game.html', remaining_guesses=remaining_guesses)
 
-    # return jsonify({
-    #     'game_state': {
-    #         'remaining_guesses': remaining_guesses,
-    #         'code_length': code_length,
-    #         'wordleify': wordleify,
-    #         'guesses': session.get('guesses', [])
-    #     }
-    # }), 200
+    return jsonify({
+        'game_state': {
+            'remaining_guesses': remaining_guesses,
+            'code_length': code_length,
+            'wordleify': wordleify,
+            'guesses': session.get('guesses', [])
+        }
+    }), 200
 
 @game_routes.route('/guess', methods=['POST'])
 def guess():
