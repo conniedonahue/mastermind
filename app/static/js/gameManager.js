@@ -68,20 +68,20 @@ class GameManager {
     }
   }
 
-  updateGameUI(gameData) {
+  updateGameUI(gameState) {
     // Update entire game state
-    console.log("Updating game UI:", gameData);
+    console.log("Updating game UI:", gameState);
 
     // Update remaining guesses
     const remainingGuessesEl = document.getElementById("remaining-guesses");
     if (remainingGuessesEl) {
-      remainingGuessesEl.textContent = gameData.config.remaining_guesses;
+      remainingGuessesEl.textContent = gameState.remaining_guesses;
     }
 
     // Populate existing guesses
     const guessHistoryEl = document.getElementById("guess-history");
-    if (guessHistoryEl && gameData.guesses) {
-      guessHistoryEl.innerHTML = gameData.guesses
+    if (guessHistoryEl && gameState.guesses) {
+      guessHistoryEl.innerHTML = gameState.guesses
         .map(
           (guess) => `
                 <div class="guess-result">

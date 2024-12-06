@@ -29,6 +29,7 @@ def create_game():
             'allowed_attempts': allowed_attempts,
             'code_length': code_length,
             'wordleify': wordleify,
+            'code': code,
         },
         'state': {
             'status': "active",
@@ -44,7 +45,7 @@ def create_game():
         'message': 'Game created successfully!',
         "session_id": session_id,
         "join_link": f"https://example.com/sessions/{session_id}",
-        "session": session
+        "session_state": session['config']
     }), 201  
 
 
@@ -81,13 +82,14 @@ def render_game_page(session_id):
 #         }
 #     }), 200
 
-@game_routes.route('/guess', methods=['POST'])
-def guess():
+@game_routes.route('/game/<session_id>', methods=['POST'])
+def guess(session_id):
+    cache = current_app.cache
     try:
         # Extract guess input and clean/validate it
         raw_guess = request.form.get('guess', '').strip()
         print("raw_guess: ", raw_guess)
-        code = session.get('code', [])
+        code = cache.get_code_by_session_id(session_id)
         print("code")
         remaining_guesses = session.get('remaining_guesses', 0)
         print('remaining')
