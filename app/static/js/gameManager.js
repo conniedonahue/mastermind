@@ -5,20 +5,20 @@ class GameManager {
     this.initializeEventListeners();
   }
 
-  async fetchGameConfig() {
-    try {
-      const response = await fetch("/game-config", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-      });
-      return await response.json();
-    } catch (error) {
-      console.error("Error fetching game configuration:", error);
-      throw error;
-    }
-  }
+  //   async fetchGameConfig() {
+  //     try {
+  //       const response = await fetch("/game-config", {
+  //         method: "GET",
+  //         headers: {
+  //           Accept: "application/json",
+  //         },
+  //       });
+  //       return await response.json();
+  //     } catch (error) {
+  //       console.error("Error fetching game configuration:", error);
+  //       throw error;
+  //     }
+  //   }
 
   async createGame(gameConfig) {
     try {
@@ -34,10 +34,9 @@ class GameManager {
       const data = await response.json();
       console.log("data: ", data);
 
-      if (data.game_state.game_id) {
-        this.gameId = data.game_state.game_id;
-        this.gameState = data.game_state;
-        this.updateUIForNewGame(data.config);
+      if (data.session_id) {
+        this.sessionId = data.session_id;
+        this.updateGameUI(data);
         return data;
       } else {
         throw new Error("Game creation failed");
@@ -62,43 +61,11 @@ class GameManager {
       if (data.game_id) {
         this.gameId = data.game_id;
         this.gameState = data;
-        this.updateGameUI(data);
+        this.updateGameUI(data.session);
       }
     } catch (error) {
       console.error("Error loading game state:", error);
     }
-  }
-
-  async submitGuess(guess) {
-    try {
-      const response = await fetch("/game/guess", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ guess }),
-      });
-
-      const data = await response.json();
-
-      if (data.guess) {
-        this.updateGuessUI(data.guess);
-        this.updateGameStateUI(data.game_state);
-        return data;
-      } else if (data.error) {
-        throw new Error(data.error);
-      }
-    } catch (error) {
-      console.error("Error submitting guess:", error);
-      throw error;
-    }
-  }
-
-  updateUIForNewGame(config) {
-    // Update UI to show game has started
-    // This might involve showing the game board, hiding welcome screen, etc.
-    console.log("New game created with config:", config);
   }
 
   updateGameUI(gameData) {
@@ -133,6 +100,38 @@ class GameManager {
     } else if (gameData.status === "lost") {
       this.handleGameLost();
     }
+  }
+
+  async submitGuess(guess) {
+    try {
+      const response = await fetch("/game/guess", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ guess }),
+      });
+
+      const data = await response.json();
+
+      if (data.guess) {
+        this.updateGuessUI(data.guess);
+        this.updateGameStateUI(data.game_state);
+        return data;
+      } else if (data.error) {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error("Error submitting guess:", error);
+      throw error;
+    }
+  }
+
+  updateUIForNewGame(config) {
+    // Update UI to show game has started
+    // This might involve showing the game board, hiding welcome screen, etc.
+    console.log("New game created with config:", config);
   }
 
   updateGuessUI(guessData) {
@@ -210,7 +209,7 @@ class GameManager {
       const result = await this.createGame(gameConfig);
 
       // Navigate to game page or update UI
-      window.location.href = "/game.html";
+      window.location.href = `/game/${result.session_id}`;
     } catch (error) {
       console.error("Failed to start game:", error);
       alert("Failed to create game. Please try again.");
@@ -234,9 +233,9 @@ class GameManager {
   // Initialize the game when the page loads
   async init() {
     // Check if we're on the game page
-    if (document.getElementById("game-container")) {
-      await this.loadGameState();
-    }
+    // if (document.getElementById("game-container")) {
+    //   await this.loadGameState();
+    // }
   }
 }
 
