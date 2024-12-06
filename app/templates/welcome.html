@@ -4,7 +4,7 @@
 
   <h3 class="settings-header">Game Settings:</h3>
   <!-- Welcome screen with options -->
-  <form method="POST" action="/create_game">
+  <form id="createGameForm">
     <div class="options-box">
       <!-- Number of allowed attempts -->
       <label for="attempts">Allowed attempts:</label>
@@ -32,4 +32,39 @@
     </div>
   </form>
 </div>
+
+<script>
+  document
+    .getElementById("createGameForm")
+    .addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      const formData = new FormData(event.target);
+      const data = new URLSearchParams();
+
+      formData.forEach((value, key) => {
+        data.append(key, value);
+      });
+
+      // Make a POST request to the backend to create the game
+      fetch("/create_game", {
+        method: "POST",
+        body: data,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("data: ", data);
+          if (data.status === "success") {
+            console.log("Game created successfully. Redirecting...");
+            window.location.href = "./play_game";
+          } else {
+            // Handle error or failure (optional)
+            alert(data.message || "Error creating game.");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    });
+</script>
 {% endblock %}

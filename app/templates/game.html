@@ -1,8 +1,7 @@
 {% extends 'base.html' %} {% block body %}
-
 <div class="container game-layout">
   <h1 class="text-center">Mastermind Game</h1>
-  <hr/>
+  <hr />
 
   <!-- Display error message if any -->
   {% if error_message %}
@@ -12,7 +11,7 @@
   <!-- Left Section -->
   <div class="guess-section">
     <h2>Enter Your Guess</h2>
-    <form method="POST" action="/guess">
+    <form id="guessForm">
       <label for="guessInput">4 numbers between 0 and 7:</label>
       <input
         type="text"
@@ -37,48 +36,50 @@
       {% endif %}
     </div>
   </div>
-
-  <!-- Two-player game -->
-  {% if is_two_player %}
-  <h3>{{ other_player_name }}'s Results</h3>
-  <div class="results-box">
-    {% for result in other_feedback %}
-    <p>{{ result }}</p>
-    {% endfor %}
-  </div>
-  {% endif %}
 </div>
-<!-- <script>
-  document.querySelector("form").addEventListener("submit", function (event) {
-    event.preventDefault();
+<script>
+  document
+    .getElementById("guessForm")
+    .addEventListener("submit", function (event) {
+      event.preventDefault();
 
-    const guessInput = document.querySelector("#guessInput").value.trim();
-    const guess = guessInput.split(/\s+/).map(Number); // Split by spaces, then convert to numbers
+      const guessInput = document.querySelector("#guessInput").value.trim();
+      const guess = guessInput.split(/\s+/).map(Number); // Split by spaces, then convert to numbers
 
-    // Validate guess
-    if (
-      guess.length !== 4 ||
-      guess.some((num) => num < 0 || num > 7 || isNaN(num))
-    ) {
-      alert("Please enter exactly 4 numbers between 0 and 7.");
-      return;
-    }
+      // Validate guess
+      if (
+        guess.length !== 4 ||
+        guess.some((num) => num < 0 || num > 7 || isNaN(num))
+      ) {
+        alert("Please enter exactly 4 numbers between 0 and 7.");
+        return;
+      }
 
-    // Submit the guess
-    fetch("/guess", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ guess }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.error) {
-          alert(data.error);
-        } else {
-          location.reload(); // Reload to see updated results
-        }
+      // Submit the guess via fetch
+      fetch("/guess", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          guess: guess.join(" "),
+        }),
       })
-      .catch((error) => console.error("Error:", error));
-  });
-</script> -->
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.error) {
+            alert(data.error);
+          } else {
+            // Update UI with the new game state
+            alert(`Guess submitted! ${data.game_state.status}`);
+            // Update remaining guesses and feedback
+            document.querySelector(
+              ".results-box"
+            ).innerHTML = `Guesses remaining: ${data.game_state.remaining_guesses}`;
+          }
+        })
+        .catch((error) => console.error("Error:", error));
+    });
+</script>
+
 {% endblock %}

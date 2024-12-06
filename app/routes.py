@@ -25,6 +25,7 @@ def create_game():
 
     return jsonify({
         'message': 'Game created successfully!',
+        'status': 'success',
         'game_state': {
             'remaining_guesses': allowed_attempts,
             'code_length': code_length,
@@ -33,20 +34,26 @@ def create_game():
         }
     }), 201  
 
+# @game_routes.route('/game.html')
+# def game_page():
+#     return render_template('play_game.html')
+
 @game_routes.route('/play_game', methods=['GET'])
 def play_game():
     remaining_guesses=session.get('remaining_guesses', 0)
     code_length=session.get('code_length', 4)
     wordleify=session.get('wordleify', False)
 
-    return jsonify({
-        'game_state': {
-            'remaining_guesses': remaining_guesses,
-            'code_length': code_length,
-            'wordleify': wordleify,
-            'guesses': session.get('guesses', [])
-        }
-    }), 200
+    return render_template('game.html', remaining_guesses=remaining_guesses)
+
+    # return jsonify({
+    #     'game_state': {
+    #         'remaining_guesses': remaining_guesses,
+    #         'code_length': code_length,
+    #         'wordleify': wordleify,
+    #         'guesses': session.get('guesses', [])
+    #     }
+    # }), 200
 
 @game_routes.route('/guess', methods=['POST'])
 def guess():
