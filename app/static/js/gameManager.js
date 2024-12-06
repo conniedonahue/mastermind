@@ -95,9 +95,9 @@ class GameManager {
     }
 
     // Handle game end conditions
-    if (gameData.status === "won") {
+    if (gameState.status === "won") {
       this.handleGameWon();
-    } else if (gameData.status === "lost") {
+    } else if (gameState.status === "lost") {
       this.handleGameLost();
     }
   }
