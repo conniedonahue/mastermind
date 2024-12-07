@@ -12,7 +12,7 @@ def home():
 
 @game_routes.route('/game', methods=['POST'])
 def create_game():
-    cache = current_app.cache
+    session_manager = current_app.session_manager
     print("allowed attempts: ", int(request.form.get('allowed_attempts')))
     # Extract data from the request
     allowed_attempts = int(request.form.get('allowed_attempts', 10))
@@ -35,7 +35,7 @@ def create_game():
             'guesses': []
         }
     }
-    session_id = cache.create_session(session) 
+    session_id = session_manager.create_session(session) 
 
     print("session created: ", session_id)
     return jsonify({
@@ -45,18 +45,11 @@ def create_game():
         "session_state": session['state']
     }), 201 
 
-    # response.set_cookie("session_id", session_id, httponly=True, samesite='None')
-
-
-
-    return response
-
-
 @game_routes.route('/game/<session_id>', methods=['GET'])
 def render_game_page(session_id):
-    cache = current_app.cache
+    session_manager = current_app.session_manager
     print('sessionID: ', session_id)
-    session_data = cache.get_session(session_id)
+    session_data = session_manager.get_session(session_id)
     print("session_data: ", session_data)
     if not session_data:
         return jsonify({"error": "Session not found"}), 404
@@ -65,8 +58,8 @@ def render_game_page(session_id):
 
 @game_routes.route('/game/<session_id>/state', methods=['GET'])
 def get_game_state(session_id):
-    cache = current_app.cache
-    session_data = cache.get_session(session_id)
+    session_manager = current_app.session_manager
+    session_data = session_manager.get_session(session_id)
 
     if not session_data:
         return jsonify({"error": "Session not found"}), 404
@@ -78,9 +71,9 @@ def get_game_state(session_id):
 
 @game_routes.route('/game/<session_id>', methods=['POST'])
 def guess(session_id):
-    cache = current_app.cache
+    session_manager = current_app.session_manager
     raw_guess = request.form['guess']
-    session_data = cache.get_session(session_id)
+    session_data = session_manager.get_session(session_id)
 
     try:
         guess = clean_and_validate_guess(raw_guess, session_data['config']['code_length'])
@@ -108,7 +101,7 @@ def guess(session_id):
             session_data['state']['status'] = 'lost'
 
         # Update session
-        cache.update_session(session_id, session_data)
+        session_manager.update_session(session_id, session_data)
 
         return jsonify({
             "result" : session_data['state']

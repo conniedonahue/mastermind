@@ -6,12 +6,11 @@ class GameManager {
   }
 
   // Game Initialization Methods
-  async init() {
-    if (document.getElementById("game-container")) {
-      await this.loadGameState();
-    }
-  }
-
+ 
+  /* Sends config to server
+     Receives confirmation
+     Redirects to game page
+  */
   async createGame(event) {
     event.preventDefault();
     const form = event.target;
@@ -38,6 +37,18 @@ class GameManager {
     }
   }
 
+  // Loads game state after redirect
+  async init() {
+    if (document.getElementById("game-container")) {
+      await this.loadGameState();
+    }
+  }
+
+  /**
+   * Pulls sessionId from URL
+   * Fetches games state from server
+   * Updates UI
+   */
   async loadGameState() {
     try {
       // Extract session ID from URL if not already set
@@ -57,6 +68,11 @@ class GameManager {
   }
 
   // Game Interaction Methods
+
+  /**
+   * Submits guess to server and updates UI with results
+   * @param {*} event 
+   */
   async submitGuess(event) {
     event.preventDefault();
     const form = event.target;

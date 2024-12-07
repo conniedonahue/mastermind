@@ -2,20 +2,15 @@ from typing import Dict, Optional
 from datetime import datetime, timedelta
 import uuid
 
-class ServerSideSessionManager:
-    """
-    Enhanced session management with additional features:
-    - Automatic session expiration
-    - Thread-safe operations
-    - Comprehensive session tracking
-    """
+class InMemorySessionManager:
+
     _store: Dict[str, Dict] = {}
     SESSION_TIMEOUT = timedelta(hours=1)  # TTL = 1 hour
 
     @classmethod
     def create_session(cls, data: dict) -> str:
         """
-        Create a new session with automatic ID generation and timestamp
+        Creates a session with automatic session_id and timestamp generation
         
         Args:
             data (dict): Initial session data
@@ -80,14 +75,15 @@ class ServerSideSessionManager:
         return True
 
     @classmethod
-    def delete_session(cls, session_id: str) -> None:
+    def delete_session(cls, session_id: str) -> str:
         """
         Remove a session
         
         Args:
             session_id (str): Session identifier to remove
         """
-        cls._store.pop(session_id, None)
+        session_id = cls._store.pop(session_id, None)
+        return f"Deleted session ${session_id}"
 
     @classmethod
     def cleanup_expired_sessions(cls) -> int:
