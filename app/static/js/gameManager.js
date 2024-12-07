@@ -92,9 +92,9 @@ class GameManager {
       const data = await response.json();
       console.log("data: ", data);
 
-      if (data.guesses) {
-        this.updateGuessUI(data.guesses[data.guesses.length - 1]);
-        this.updateGameStateUI(data);
+      if (data.result) {
+        this.updateGuessUI(data.result.guesses);
+        this.updateGameStateUI(data.result);
         console.log("updated");
         return;
       } else if (data.error) {
@@ -115,16 +115,32 @@ class GameManager {
   updateGuessUI(guessData) {
     // Add the latest guess to the history
     const guessHistoryEl = document.getElementById("guess-history");
+
     if (guessHistoryEl) {
-      const guessResultEl = document.createElement("div");
-      guessResultEl.classList.add("guess-result");
-      guessResultEl.innerHTML = `
-                Guess: ${guessData.guess.join(" ")} 
-                | Correct Numbers: ${guessData.correct_numbers} 
-                | Correct Positions: ${guessData.correct_positions}
+      guessHistoryEl.innerHTML = "";
+      if (guessData && guessData.length > 0) {
+        guessData.forEach((guess) => {
+          const guessResultEl = document.createElement("div");
+          guessResultEl.classList.add("guess-result");
+          guessResultEl.innerHTML = `
+                Guess: ${guess.guess.join(" ")} 
+                | Correct Numbers: ${guess.correct_numbers} 
+                | Correct Positions: ${guess.correct_positions}
             `;
-      guessHistoryEl.appendChild(guessResultEl);
+          guessHistoryEl.appendChild(guessResultEl);
+        });
+      }
     }
+    // if (guessHistoryEl) {
+    //   const guessResultEl = document.createElement("div");
+    //   guessResultEl.classList.add("guess-result");
+    //   guessResultEl.innerHTML = `
+    //             Guess: ${guessData.guess.join(" ")}
+    //             | Correct Numbers: ${guessData.correct_numbers}
+    //             | Correct Positions: ${guessData.correct_positions}
+    //         `;
+    //   guessHistoryEl.appendChild(guessResultEl);
+    // }
   }
 
   updateGameStateUI(gameState) {
