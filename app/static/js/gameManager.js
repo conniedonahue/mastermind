@@ -1,34 +1,18 @@
 class GameManager {
   constructor() {
     this.gameState = null;
-    this.gameId = null;
+    this.sessionId = null;
     this.initializeEventListeners();
   }
 
-  //   async fetchGameConfig() {
-  //     try {
-  //       const response = await fetch("/game-config", {
-  //         method: "GET",
-  //         headers: {
-  //           Accept: "application/json",
-  //         },
-  //       });
-  //       return await response.json();
-  //     } catch (error) {
-  //       console.error("Error fetching game configuration:", error);
-  //       throw error;
-  //     }
-  //   }
-
-  async createGame(gameConfig) {
+  async createGame(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
     try {
       const response = await fetch("/game", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(gameConfig),
+        body: formData,
       });
 
       const data = await response.json();
@@ -37,7 +21,8 @@ class GameManager {
       if (data.session_id) {
         this.sessionId = data.session_id;
         this.updateGameUI(data);
-        return data;
+        console.log("this.sessionId: ", this.sessionId);
+        return (window.location.href = `/game/${this.sessionId}`);
       } else {
         throw new Error("Game creation failed");
       }
@@ -48,24 +33,16 @@ class GameManager {
   }
 
   async loadGameState() {
-    try {
-      const response = await fetch("/game", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.game_id) {
-        this.gameId = data.game_id;
-        this.gameState = data;
-        this.updateGameUI(data.session);
-      }
-    } catch (error) {
-      console.error("Error loading game state:", error);
+    console.log("loading....");
+    if (!this.sessionId) {
+      this.sessionId = window.location.pathname.split("/").pop();
     }
+    const response = await fetch(`/game/${this.sessionId}/state`, {
+      method: "GET",
+    });
+    const data = await response.json();
+    this.gameState = data.game_state;
+    console.log("gameState: ", this.gameState);
   }
 
   updateGameUI(gameState) {
@@ -102,23 +79,24 @@ class GameManager {
     }
   }
 
-  async submitGuess(guess) {
+  async submitGuess(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
     try {
       const response = await fetch(`/game/${this.sessionId}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ guess }),
+        body: formData,
       });
 
       const data = await response.json();
+      console.log("data: ", data);
 
-      if (data.guess) {
-        this.updateGuessUI(data.guess);
-        this.updateGameStateUI(data.game_state);
-        return data;
+      if (data.guesses) {
+        this.updateGuessUI(data.guesses[data.guesses.length - 1]);
+        this.updateGameStateUI(data);
+        console.log("updated");
+        return;
       } else if (data.error) {
         throw new Error(data.error);
       }
@@ -141,7 +119,7 @@ class GameManager {
       const guessResultEl = document.createElement("div");
       guessResultEl.classList.add("guess-result");
       guessResultEl.innerHTML = `
-                Guess: ${guessData.values.join(" ")} 
+                Guess: ${guessData.guess.join(" ")} 
                 | Correct Numbers: ${guessData.correct_numbers} 
                 | Correct Positions: ${guessData.correct_positions}
             `;
@@ -178,16 +156,13 @@ class GameManager {
     // Welcome page game start button
     const startGameForm = document.getElementById("game-settings-form");
     if (startGameForm) {
-      startGameForm.addEventListener("submit", this.handleGameStart.bind(this));
+      startGameForm.addEventListener("submit", this.createGame.bind(this));
     }
 
     // Game page guess submission
     const guessForm = document.getElementById("guess-form");
     if (guessForm) {
-      guessForm.addEventListener(
-        "submit",
-        this.handleGuessSubmission.bind(this)
-      );
+      guessForm.addEventListener("submit", this.submitGuess.bind(this));
     }
   }
 
@@ -207,6 +182,8 @@ class GameManager {
       };
 
       const result = await this.createGame(gameConfig);
+      this.gameState = result;
+      this.sessionId = result.sessionId;
 
       // Navigate to game page or update UI
       window.location.href = `/game/${result.session_id}`;
@@ -216,26 +193,26 @@ class GameManager {
     }
   }
 
-  async handleGuessSubmission(event) {
-    event.preventDefault();
+  //   async handleGuessSubmission(event) {
+  //     event.preventDefault();
 
-    const guessInput = document.getElementById("guess-input");
-    const guess = guessInput.value;
+  //     const guessInput = document.getElementById("guess-input");
+  //     const guess = guessInput.value;
 
-    try {
-      await this.submitGuess(guess);
-      guessInput.value = ""; // Clear input
-    } catch (error) {
-      alert(error.message);
-    }
-  }
+  //     try {
+  //       await this.submitGuess(guess);
+  //       guessInput.value = ""; // Clear input
+  //     } catch (error) {
+  //       alert(error.message);
+  //     }
+  //   }
 
   // Initialize the game when the page loads
   async init() {
     // Check if we're on the game page
-    // if (document.getElementById("game-container")) {
-    //   await this.loadGameState();
-    // }
+    if (document.getElementById("game-container")) {
+      await this.loadGameState();
+    }
   }
 }
 
@@ -244,3 +221,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const gameManager = new GameManager();
   gameManager.init();
 });
+
+function getCookie(name) {
+  console.log("cookie: ", document.cookie);
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  console.log("parts: ", parts);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+}

@@ -11,7 +11,7 @@
   <div class="guess-section">
     <h2>Enter Your Guess</h2>
 
-    <form id="guess-form">
+    <form id="guess-form" method="POST">
       <label for="guess-input"
         >{{ code_length }} numbers between 0 and 7:</label
       >
@@ -23,13 +23,13 @@
         pattern="[0-7]{4}"
         title="Enter exactly {{ code_length }} digits between 0 and 7"
       />
-      <button type="submit">Submit Guess</button>
+      <button type="submit" id="guess-submit-btn">Submit Guess</button>
     </form>
 
     {% if remaining_guesses is not none %}
     <div class="game-info">
       Guesses remaining:
-      <span id="remaining-guesses">{{ remaining_guesses }}</span>
+      <span id="remaining-guesses">{{ game_state.remaining_guesses }}</span>
     </div>
     {% endif %}
   </div>
@@ -37,7 +37,14 @@
   <div class="results-section">
     <h2>Results</h2>
     <div id="guess-history" class="results-box">
-      <!-- Guess results will be dynamically populated here -->
+      <ul id="guesses-list">
+        {% for guess in game_state.guesses %}
+        <li>
+          Guess: {{ guess.guess }} | Correct Numbers: {{ guess.correct_numbers
+          }} | Correct Positions: {{ guess.correct_positions }}
+        </li>
+        {% endfor %}
+      </ul>
     </div>
   </div>
 </div>

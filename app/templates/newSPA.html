@@ -1,0 +1,47 @@
+<body>
+  <div id="app">
+    <div id="welcome-page" class="container center-screen">
+      <h1>Mastermind Game</h1>
+      <form id="game-settings-form">
+        <!-- Game settings form -->
+        <div>
+          <label for="allowed_attempts">Allowed attempts:</label>
+          <select id="allowed_attempts" name="allowed_attempts">
+            <option value="10" selected>10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+          </select>
+        </div>
+        <div>
+          <label for="code_length">Number of digits in codeword:</label>
+          <select id="code_length" name="code_length">
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+        </div>
+        <div>
+          <label for="wordle_ify">
+            <input type="checkbox" id="wordle_ify" name="wordle_ify" />
+            Wordle-ify (use colors for feedback)
+          </label>
+        </div>
+        <button type="submit" id="start-game-btn">Start Game</button>
+      </form>
+    </div>
+
+    <div id="game-page" class="container game-layout" style="display: none">
+      <h1>Mastermind Game</h1>
+      <div class="guess-section">
+        <form id="guess-form">
+          <label for="guess-input">Enter your guess:</label>
+          <input id="guess-input" type="text" required />
+          <button type="submit">Submit Guess</button>
+        </form>
+      </div>
+      <div id="guess-history" class="results-box"></div>
+      <div>Guesses remaining: <span id="remaining-guesses"></span></div>
+    </div>
+  </div>
+  <script src="/static/js/newGameMGMT.js"></script>
+</body>
