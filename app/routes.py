@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash, current_app, make_response
 from .game_logic import generate_code, evaluate_guess, clean_and_validate_guess
+from .db.session_manager import initialize_session
 from app import create_app 
 import uuid
 
@@ -18,24 +19,31 @@ def create_game():
     allowed_attempts = int(request.form.get('allowed_attempts', 10))
     code_length = int(request.form.get('code_length', 4))
     wordleify = 'wordleify' in request.form
+    config = {
+        'allowed_attempts': allowed_attempts,
+        'code_length': code_length,
+        'wordleify': wordleify,
+    }
+
     code = generate_code(code_length)
 
 
     # Initialize session
-    session = {
-       'config': {
-            'allowed_attempts': allowed_attempts,
-            'code_length': code_length,
-            'wordleify': wordleify,
-            'code': [1234],
-        },
-        'state': {
-            'status': "active",
-            'remaining_guesses': allowed_attempts,
-            'guesses': []
-        }
-    }
-    session_id = session_manager.create_session(session) 
+    session_id = initialize_session(session_manager, config)
+    # session = {
+    #    'config': {
+    #         'allowed_attempts': allowed_attempts,
+    #         'code_length': code_length,
+    #         'wordleify': wordleify,
+    #         'code': [1234],
+    #     },
+    #     'state': {
+    #         'status': "active",
+    #         'remaining_guesses': allowed_attempts,
+    #         'guesses': []
+    #     }
+    # }
+    # session_id = session_manager.create_session(session) 
 
     print("session created: ", session_id)
     return jsonify({
