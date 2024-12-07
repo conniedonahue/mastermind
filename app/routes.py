@@ -19,17 +19,16 @@ def create_game():
     allowed_attempts = int(request.form.get('allowed_attempts', 10))
     code_length = int(request.form.get('code_length', 4))
     wordleify = 'wordleify' in request.form
+    code = generate_code(code_length)
     config = {
         'allowed_attempts': allowed_attempts,
         'code_length': code_length,
         'wordleify': wordleify,
+        'code': code
     }
 
-    code = generate_code(code_length)
-
-
     # Initialize session
-    session_id = initialize_session(session_manager, config)
+    session_id, session_state = initialize_session(session_manager, config)
     # session = {
     #    'config': {
     #         'allowed_attempts': allowed_attempts,
@@ -50,7 +49,7 @@ def create_game():
         'message': 'Game created successfully!',
         "session_id": session_id,
         "join_link": f"https://example.com/sessions/{session_id}",
-        "session_state": session['state']
+        "session_state": session_state
     }), 201 
 
 @game_routes.route('/game/<session_id>', methods=['GET'])
