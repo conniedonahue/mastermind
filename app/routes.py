@@ -70,7 +70,7 @@ def render_game_page(session_id):
     template = 'multiplayer_game.html' if is_multiplayer else 'game.html'
 
     logger.info("Rendering game page for session %s, is_multiplayer = %s", session_id, is_multiplayer)
-    return render_template('game.html', 
+    return render_template(template, 
                             session_id="session", 
                             game_state=session_data['state'], 
                             is_multiplayer=is_multiplayer,
