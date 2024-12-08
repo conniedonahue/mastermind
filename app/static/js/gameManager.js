@@ -30,7 +30,7 @@ class GameManager {
         this.updateGameUI(data.session_state);
 
         if (data.join_link) {
-          window.location.href = `/game/${this.sessionId}`;
+          window.location.href = `/multiplayer-game/${this.sessionId}`;
         } else {
           window.location.href = `/game/${this.sessionId}`;
         }
