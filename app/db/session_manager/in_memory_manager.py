@@ -1,6 +1,9 @@
 from typing import Dict, Optional
 from datetime import datetime, timedelta
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 class InMemorySessionManager:
 
@@ -26,7 +29,10 @@ class InMemorySessionManager:
             'data': data,
             'status': 'active'
         }
+        logger.info("Creating session: %s", session_id)
         cls._store[session_id] = session_data
+        logger.debug("Session created: %s with initial data: %s", session_id, session_data)
+
         return session_id
 
     @classmethod
@@ -43,15 +49,18 @@ class InMemorySessionManager:
         session = cls._store.get(session_id)
         
         if not session:
+            logger.warning("Session not found: %s", session_id)
             return None
         
         # Check session expiration
         if datetime.now() - session['created_at'] > cls.SESSION_TIMEOUT:
+            logger.info("Session expired: %s", session_id)
             cls.delete_session(session_id)
             return None
         
         # Update last accessed timestamp
         session['last_accessed'] = datetime.now()
+        logger.debug("Session accessed: %s", session_id)
         return session['data']
 
     @classmethod
@@ -68,10 +77,12 @@ class InMemorySessionManager:
         """
         session = cls._store.get(session_id)
         if not session:
+            logger.warning("Session not found for update: %s", session_id)
             return False
         
         session['data'].update(updates)
         session['last_accessed'] = datetime.now()
+        logger.info("Session updated: %s with data: %s", session_id, updates)
         return True
 
     @classmethod
@@ -83,6 +94,10 @@ class InMemorySessionManager:
             session_id (str): Session identifier to remove
         """
         session_id = cls._store.pop(session_id, None)
+        if session_id:
+            logger.info("Deleted session: %s", session_id)
+        else:
+            logger.warning("Attempted to delete non-existing session: %s", session_id)
         return f"Deleted session ${session_id}"
 
     @classmethod
@@ -102,6 +117,7 @@ class InMemorySessionManager:
         for session_id in expired_sessions:
             del cls._store[session_id]
         
+        logger.info("Cleaned up %d expired sessions", len(expired_sessions))
         return len(expired_sessions)
 
     @classmethod
@@ -113,7 +129,13 @@ class InMemorySessionManager:
             int: Number of active sessions
         """
         now = datetime.now()
-        return sum(
-            1 for session in cls._store.values()
-            if now - session['created_at'] <= cls.SESSION_TIMEOUT
-        )
+
+        active_sessions = 0
+        
+        for session in cls._store.values():
+            if now - session['created_at'] <= cls.SESSION_TIMEOUT:
+                active_sessions += 1
+       
+        logger.debug("Active session count: %d", active_sessions)
+
+        return active_sessions
