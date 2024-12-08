@@ -53,8 +53,6 @@ def evaluate_guess(code, guess):
     """
     logger.info("Evaluating guess: %s against code: %s", guess, code)
     correct_numbers, correct_positions = 0, 0
-
-    print("code: ", code, "guess: ", guess)
     
     for num in set(guess):
         correct_numbers += min(code.count(num), guess.count(num))
@@ -94,5 +92,4 @@ def check_win_lose_conditions(correct_numbers, correct_positions, session_data, 
         if session_data['state']['player1']['remaining_guesses'] <= 0:
             status = 'lost'
     
-    print("status: ", status)
     return status
