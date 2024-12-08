@@ -2,12 +2,15 @@ from flask import Blueprint, request, jsonify, render_template, redirect, url_fo
 from .game_logic import generate_code, evaluate_guess, clean_and_validate_guess, check_win_lose_conditions
 from .db.session_manager import initialize_session
 from app import create_app 
+import logging
 import uuid
 
 game_routes = Blueprint('game_routes', __name__)
+logger = logging.getLogger(__name__) 
 
 @game_routes.route('/')
 def home():
+    logger.info("Serving the home page.")
     return render_template('welcome.html')
 
 
@@ -20,7 +23,7 @@ def create_game():
     wordleify = 'wordleify' in request.form
     multiplayer = 'multiplayer' in request.form
 
-    code = generate_code(code_length)
+    # code = generate_code(code_length)
 
     config = {
         'allowed_attempts': allowed_attempts,

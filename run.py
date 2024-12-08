@@ -1,4 +1,5 @@
 from app import create_app
+from app.logging_config import setup_logging
 from flask import render_template
 from dotenv import load_dotenv
 import os
@@ -6,6 +7,7 @@ import os
 environment = os.getenv("FLASK_ENV", "development")
 env_file = f".env.{environment}"
 load_dotenv(env_file)
+setup_logging()
 
 app = create_app()
 app.secret_key = os.getenv('SECRET_KEY', 'fallback_key')

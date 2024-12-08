@@ -1,4 +1,7 @@
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 def generate_code(code_length=4):
     """
@@ -7,6 +10,7 @@ def generate_code(code_length=4):
     Returns that response as list of ints (e.g. [3, 4, 2, 1]) 
     
     """
+    logger.debug("Generating a code of length %d.", code_length)
     url = "https://www.random.org/integers"
     params = {
         "num": code_length,
@@ -47,6 +51,7 @@ def clean_and_validate_guess(raw_guess, code_length=4):
 def evaluate_guess(code, guess):
     """Evaluates the player's guess and returns feedback.
     """
+    logger.info("Evaluating guess: %s against code: %s", guess, code)
     correct_numbers, correct_positions = 0, 0
 
     print("code: ", code, "guess: ", guess)

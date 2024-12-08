@@ -1,6 +1,9 @@
 from typing import Dict, Optional
 from datetime import datetime, timedelta
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 class InMemorySessionManager:
 
@@ -26,6 +29,7 @@ class InMemorySessionManager:
             'data': data,
             'status': 'active'
         }
+        logger.info("Creating session: %s with data: %s", session_id, data)
         cls._store[session_id] = session_data
         return session_id
 
