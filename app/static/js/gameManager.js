@@ -300,8 +300,16 @@ class MultiplayerGameManager extends GameManager {
     const remainingGuessesEl = document.getElementById(
       `remaining-guesses-${player}`
     );
+    const submitButtonEl = document.getElementById(
+      `guess-submit-btn-${player}`
+    );
+
     if (remainingGuessesEl) {
       remainingGuessesEl.textContent = remainingGuesses;
+    }
+
+    if (submitButtonEl) {
+      submitButtonEl.disabled = remainingGuesses === 0;
     }
   }
 
