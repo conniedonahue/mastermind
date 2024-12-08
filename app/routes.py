@@ -58,7 +58,7 @@ def render_game_page(session_id):
     return render_template('game.html', session_id="session", 
                             game_state=session_data['state'], 
                             is_multiplayer=is_multiplayer   ,
-                            join_link=f"/game/join/{session_id}" if is_multiplayer else None)
+                            join_link=f"/multiplayer-game/join/{session_id}" if is_multiplayer else None)
 
 
 @game_routes.route('/multiplayer-game/<session_id>', methods=['GET'])
@@ -78,7 +78,7 @@ def render_multiplayer_game_page(session_id):
                             is_multiplayer=is_multiplayer   ,
                             join_link=f"/game/join/{session_id}" if is_multiplayer else None)
 
-@game_routes.route('/game/join/<session_id>', methods=['GET'])
+@game_routes.route('/multiplayer-game/join/<session_id>', methods=['GET'])
 def render_join_page(session_id):
     session_manager = current_app.session_manager
     session_data = session_manager.get_session(session_id)
@@ -88,7 +88,7 @@ def render_join_page(session_id):
 
     return render_template('join_game.html', session_id=session_id, session_data=session_data)
 
-@game_routes.route('/game/<session_id>/join', methods=['POST'])
+@game_routes.route('/multiplayer-game/join/<session_id>/', methods=['POST'])
 def join_multiplayer_game(session_id):
     session_manager = current_app.session_manager
     session_data = session_manager.get_session(session_id)
@@ -98,12 +98,14 @@ def join_multiplayer_game(session_id):
 
     # Add player 2 to the session
     if 'player2' not in session_data['state']:
+        player2_name = request.form.get('player2_name', 'Player 2')
         session_data['state']['player2'] = {
+            'name': player2_name,
             'remaining_guesses': session_data['config']['allowed_attempts'],
             'guesses': []
         }
         session_manager.update_session(session_id, session_data)
-        return jsonify({"message": "Joined game successfully"}), 200
+        return jsonify({"message": f"{player2_name} joined game successfully"}), 200
     else:
         return jsonify({"error": "Game is full"}), 400
 

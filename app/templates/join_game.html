@@ -53,30 +53,52 @@
   <body>
     <div class="container">
       <h1>Join Game</h1>
-      <p>
-        Welcome! {{session_data}} Join the game using the session ID or by clicking the link
-        below.
-      </p>
-
-      <!-- Display the join link -->
-      <a class="btn" href="/game/{{ session_id }}"
-        >Join Game</a
-      >
+      <p>Welcome! {{session_data}} Join the game by clicking the link below.</p>
 
       <hr />
 
       <!-- Option to manually enter the session ID -->
-      <form action="/game/{{session_id}}" method="GET">
-        <label for="session_id">Enter Session ID:</label><br />
+      <form action="/multiplayer-game/join/{{ session_id }}" method="POST">
+        <label for="player2">Enter Name:</label><br />
         <input
           type="text"
-          id="session_id"
-          name="session_id"
-          placeholder="Enter Session ID"
+          id="player2-name"
+          name="player2_name"
+          placeholder="Enter Name"
           required
         /><br />
         <button type="submit" class="btn">Join Game</button>
       </form>
     </div>
   </body>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const joinForm = document.querySelector("form");
+      joinForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(joinForm);
+        const sessionId = "{{ session_id }}";
+
+        try {
+          const response = await fetch(`/multiplayer-game/join/${sessionId}/`, {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            window.location.href = `/multiplayer-game/${sessionId}`;
+          } else {
+            alert(data.error || "An error occurred while joining the game.");
+          }
+        } catch (error) {
+          console.error("Error joining the game:", error);
+          alert("Failed to join the game. Please try again.");
+        }
+      });
+    });
+  </script>
 </html>

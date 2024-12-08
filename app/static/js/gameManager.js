@@ -3,7 +3,6 @@ class GameManager {
     this.gameState = null;
     this.sessionId = null;
     this.initializeEventListeners();
-    this.isMultiplayer = null;
   }
 
   // Game Initialization Methods
@@ -16,6 +15,7 @@ class GameManager {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
+    console.log("form: ", formData);
 
     try {
       const response = await fetch("/game", {
@@ -24,16 +24,18 @@ class GameManager {
       });
 
       const data = await response.json();
+      console.log("data: ", data);
 
       if (data.session_id) {
         this.sessionId = data.session_id;
         this.updateGameUI(data.session_state);
 
-        if (data.join_link) {
-          window.location.href = `/multiplayer-game/${this.sessionId}`;
-        } else {
-          window.location.href = `/game/${this.sessionId}`;
-        }
+        const isMultiplayer = !!data.join_link;
+        const url = isMultiplayer
+          ? `/multiplayer-game/${this.sessionId}`
+          : `/game/${this.sessionId}`;
+
+        window.location.href = url;
       } else {
         throw new Error("Game creation failed");
       }
@@ -66,13 +68,7 @@ class GameManager {
       const data = await response.json();
 
       this.gameState = data.game_state;
-      this.isMultiplayer = document.body.classList.contains("multiplayer");
-
       this.updateGameUI(this.gameState);
-
-      if (this.isMultiplayer && !this.gameState.player2) {
-        this.startWaitingForPlayer();
-      }
     } catch (error) {
       console.error("Error loading game state:", error);
       this.handleError(error);
@@ -89,10 +85,6 @@ class GameManager {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
-
-    if (this.isMultiplayer) {
-      formData.append("player", "player1");
-    }
 
     try {
       const response = await fetch(`/game/${this.sessionId}`, {
@@ -111,28 +103,6 @@ class GameManager {
     } catch (error) {
       console.error("Error submitting guess:", error);
       this.handleError(error);
-    }
-  }
-
-  startWaitingForPlayer() {
-    // Add UI for waiting for player 2
-    const waitingSection = document.createElement("div");
-    waitingSection.innerHTML = `
-      <p>Waiting for Player 2 to join...</p>
-      <p>Share this link: ${window.location.href}</p>
-    `;
-    document.getElementById("multiplayer-section").appendChild(waitingSection);
-  }
-
-  handleMultiplayerGameStatus(gameState) {
-    switch (gameState.status) {
-      case "player1_won":
-        alert("You won! Waiting for Player 2 to finish.");
-        break;
-      case "player1_wins_player2_loses":
-        alert("You won! Player 2 did not guess in time.");
-        break;
-      // Add more multiplayer-specific status handlers
     }
   }
 
@@ -214,8 +184,69 @@ class GameManager {
   }
 }
 
+class MultiplayerGameManager extends GameManager {
+  async loadGameState() {
+    try {
+      await super.loadGameState();
+      console.log("multiplayer GS: ", this.gameState);
+
+      if (!this.gameState.player2) {
+        this.startWaitingForPlayer();
+      }
+    } catch (error) {
+      console.error("Error loading game state:", error);
+      this.handleError(error);
+    }
+  }
+
+  startWaitingForPlayer() {
+    const waitingMessage = document.createElement("div");
+    waitingMessage.innerHTML = `
+        <p>Waiting for Player 2 to join...</p>
+        <p>Share this link: ${window.location.href}</p>
+      `;
+    document.getElementById("waiting-section").appendChild(waitingMessage);
+
+    const interval = setInterval(async () => {
+      console.log("fetchings");
+      try {
+        const response = await fetch(`/game/${this.sessionId}/state`);
+        const data = await response.json();
+
+        if (data.game_state.player2) {
+          waitingMessage.innerHTML = "<p>Player 2 has joined!</p>";
+          clearInterval(interval);
+        }
+      } catch (error) {
+        console.error("Error checking player status:", error);
+      }
+    }, 5000);
+  }
+
+  checkGameStatus(gameState) {
+    super.checkGameStatus(gameState);
+
+    if (this.isMultiplayer) {
+      this.handleMultiplayerGameStatus(gameState);
+    }
+  }
+
+  handleMultiplayerGameStatus(gameState) {
+    if (gameState.status === "player1_won") {
+      alert("You won! Waiting for Player 2 to finish.");
+    } else if (gameState.status === "player1_wins_player2_loses") {
+      alert("You won! Player 2 did not guess in time.");
+    }
+  }
+}
+
 // Initialize the game manager when the page loads
 document.addEventListener("DOMContentLoaded", () => {
-  const gameManager = new GameManager();
+  const gameContainer = document.getElementById("game-container");
+  console.log(gameContainer?.dataset);
+  const isMultiplayer = gameContainer?.dataset.isMultiplayer === "True";
+  const gameManager = isMultiplayer
+    ? new MultiplayerGameManager()
+    : new GameManager();
   gameManager.init();
 });

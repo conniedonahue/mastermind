@@ -1,5 +1,9 @@
 {% extends 'base.html' %} {% block body %}
-<div id="game-container" class="container game-layout">
+<div
+  id="game-container"
+  class="container game-layout"
+  data-is-multiplayer="{{ is_multiplayer }}"
+>
   <h1 id="mastermind-game" class="text-center">Mastermind Game</h1>
 
   <hr />
@@ -34,20 +38,10 @@
     {% endif %}
   </div>
 
-  {% if is_multiplayer %}
-  <div class="multiplayer-section">
+  <div class="multiplayer-section" id="multiplayer-section">
     <h2>Multiplayer Game</h2>
-
-    {% if 'player2' not in game_state %}
-    <div class="waiting-for-player">
-      Waiting for Player 2 to join... Share this link to invite a friend: {{
-      join_link }}
-    </div>
-    {% else %}
-    <div class="player-status">Player 2 has joined!</div>
-    {% endif %}
+    <div id="waiting-section"></div>
   </div>
-  {% endif %}
 
   <div class="results-section">
     <h2>Results</h2>
