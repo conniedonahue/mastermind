@@ -27,7 +27,7 @@ def create_game():
         'code_length': code_length,
         'wordleify': wordleify,
         'multiplayer': multiplayer,
-        'code': [0,0,0,0]
+        'code': [0, 0 , 0 ,0]
     }
 
     print("config: ", config)
@@ -47,32 +47,35 @@ def create_game():
 @game_routes.route('/game/<session_id>', methods=['GET'])
 def render_game_page(session_id):
     session_manager = current_app.session_manager
-    print('sessionID: ', session_id)
-    session_data = session_manager.get_session(session_id)
-    print("session_data: ", session_data)
-    if not session_data:
-        return jsonify({"error": "Session not found"}), 404
-
-    is_multiplayer = session_data['config'].get('multiplayer', False)
-
-    return render_template('game.html', session_id="session", 
-                            game_state=session_data['state'], 
-                            is_multiplayer=is_multiplayer)
-
-@game_routes.route('/multiplayer-game/<session_id>', methods=['GET'])
-def render_multiplayer_game_page(session_id):
-    session_manager = current_app.session_manager
     session_data = session_manager.get_session(session_id)
     if not session_data:
         return jsonify({"error": "Session not found"}), 404
 
     is_multiplayer = session_data['config'].get('multiplayer', False)
+    template = 'multiplayer_game.html' if is_multiplayer else 'game.html'
 
-    return render_template('multiplayer_game.html', 
+    return render_template('game.html', 
                             session_id="session", 
                             game_state=session_data['state'], 
-                            is_multiplayer=is_multiplayer   ,
+                            is_multiplayer=is_multiplayer,
                             join_link=f"/game/join/{session_id}" if is_multiplayer else None)
+
+# @game_routes.route('/multiplayer-game/<session_id>', methods=['GET'])
+# def render_multiplayer_game_page(session_id):
+#     session_manager = current_app.session_manager
+#     session_data = session_manager.get_session(session_id)
+#     if not session_data:
+#         return jsonify({"error": "Session not found"}), 404
+
+#     is_multiplayer = session_data['config'].get('multiplayer', False)
+#     template = 'multiplayer_game.html' if is_multiplayer else 'game.html'
+
+
+#     return render_template(template, 
+#                             session_id="session", 
+#                             game_state=session_data['state'], 
+#                             is_multiplayer=is_multiplayer   ,
+#                             join_link=f"/game/join/{session_id}" if is_multiplayer else None)
 
 @game_routes.route('/multiplayer-game/join/<session_id>', methods=['GET'])
 def render_join_page(session_id):

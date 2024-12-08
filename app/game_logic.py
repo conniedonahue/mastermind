@@ -9,7 +9,7 @@ def generate_code(code_length=4):
     """
     url = "https://www.random.org/integers"
     params = {
-        "num": 4,
+        "num": code_length,
         "min": 0,
         "max": 7,
         "col": 1,

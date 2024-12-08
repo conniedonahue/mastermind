@@ -35,7 +35,7 @@ class GameManager {
           ? `/multiplayer-game/${this.sessionId}`
           : `/game/${this.sessionId}`;
 
-        window.location.href = url;
+        window.location.href = `/game/${this.sessionId}`;
       } else {
         throw new Error("Game creation failed");
       }
