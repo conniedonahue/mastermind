@@ -14,7 +14,6 @@ def home():
 @game_routes.route('/game', methods=['POST'])
 def create_game():
     session_manager = current_app.session_manager
-    print("allowed attempts: ", int(request.form.get('allowed_attempts')))
     # Extract data from the request
     allowed_attempts = int(request.form.get('allowed_attempts', 10))
     code_length = int(request.form.get('code_length', 4))
@@ -26,6 +25,8 @@ def create_game():
         'wordleify': wordleify,
         'code': code
     }
+
+    print("config: ", config)
 
     # Initialize session
     session_id, session_state = initialize_session(session_manager, config)
@@ -85,8 +86,6 @@ def guess(session_id):
     try:
         guess = clean_and_validate_guess(raw_guess, session_data['config']['code_length'])
         
-        print('cleaned guess: ', guess)
-        # Existing game logic for evaluating guess
         correct_numbers, correct_positions = evaluate_guess(
             session_data['config']['code'], 
             guess

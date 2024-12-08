@@ -1,7 +1,12 @@
 import requests
 
 def generate_code(code_length=4):
-    """Fetches a random 4-digit code ( between 0 and 7) using Random.org API."""
+    """
+    Fetches a random 4-digit code ( between `min` and `max`) using Random.org API.
+    Random.org API returns a string column of numbers (e.g. '3/n4/n2/n1')
+    Returns that response as list of ints (e.g. [3, 4, 2, 1]) 
+    
+    """
     url = "https://www.random.org/integers"
     params = {
         "num": 4,
@@ -16,9 +21,11 @@ def generate_code(code_length=4):
     try:
         response = requests.get(url, params=params)
         response.raise_for_status()
+        print(f"Random number: {response.text}")
         numbers = list(map(int, response.text.split()))
         return numbers
     except requests.exceptions.RequestException as e:
+        print(f"HTTP error occurred while fetching code: {e}")
         return None
 
 def clean_and_validate_guess(raw_guess, code_length=4):
@@ -39,7 +46,17 @@ def clean_and_validate_guess(raw_guess, code_length=4):
 
 
 def evaluate_guess(code, guess):
-    """Evaluates the player's guess and returns feedback."""
-    correct_positions = sum(1 for c, g in zip(code, guess) if c == g)
-    correct_numbers = sum(min(code.count(x), guess.count(x)) for x in set(guess)) - correct_positions
+    """Evaluates the player's guess and returns feedback.
+    """
+    correct_numbers, correct_positions = 0, 0
+
+    print("code: ", code, "guess: ", guess)
+    
+    for num in set(guess):
+        correct_numbers += min(code.count(num), guess.count(num))
+    
+    for c, g in zip(code, guess):
+        if c == g:
+            correct_positions += 1
+
     return correct_numbers, correct_positions
