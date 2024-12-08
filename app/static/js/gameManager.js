@@ -109,19 +109,21 @@ class GameManager {
   // UI Update Methods
   updateGameUI(gameState) {
     this.updateRemainingGuesses(gameState);
-    this.updateGuessUI(gameState.guesses);
+    this.updateGuessUI(gameState);
     this.checkGameStatus(gameState);
   }
 
   updateRemainingGuesses(gameState) {
+    console.log("remaining GS: ", gameState);
     const remainingGuessesEl = document.getElementById("remaining-guesses");
     if (remainingGuessesEl) {
-      remainingGuessesEl.textContent = gameState.remaining_guesses;
+      remainingGuessesEl.textContent = gameState.player1.remaining_guesses;
     }
   }
 
   updateGuessUI(guessData) {
     const guessHistoryEl = document.getElementById("guess-history");
+    console.log("gd: ", guessData);
 
     if (guessHistoryEl) {
       guessHistoryEl.innerHTML = "";
@@ -192,6 +194,8 @@ class MultiplayerGameManager extends GameManager {
 
       if (!this.gameState.player2) {
         this.startWaitingForPlayer();
+      } else {
+        this.initializeGuessHandlers();
       }
     } catch (error) {
       console.error("Error loading game state:", error);
@@ -221,6 +225,88 @@ class MultiplayerGameManager extends GameManager {
         console.error("Error checking player status:", error);
       }
     }, 5000);
+  }
+
+  // Initialize handlers for Player 1 and Player 2 guesses
+  initializeGuessHandlers() {
+    const formPlayer1 = document.getElementById("guess-form-player1");
+    const formPlayer2 = document.getElementById("guess-form-player2");
+
+    if (formPlayer1) {
+      formPlayer1.addEventListener("submit", (event) =>
+        this.handleGuessSubmit(event, "player1")
+      );
+    }
+
+    if (formPlayer2) {
+      formPlayer2.addEventListener("submit", (event) =>
+        this.handleGuessSubmit(event, "player2")
+      );
+    }
+  }
+
+  // Handle guess submission for both players
+  async handleGuessSubmit(event, player) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    formData.append("player", player);
+
+    try {
+      const response = await fetch(`/game/${this.sessionId}`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.result) {
+        // Update UI with the result
+        this.updateGuessUI(data.result);
+        this.updateRemainingGuesses(data.result, player);
+      }
+    } catch (error) {
+      console.error(`Error submitting ${player} guess:`, error);
+    }
+  }
+
+  // Update the guess history UI
+  updateGuessUI(result) {
+    const player1Guesses = result.player1.guesses;
+    const player2Guesses = result.player2?.guesses;
+    const guesses = player1Guesses.concat(player2Guesses);
+    const guessHistoryEl = document.getElementById("guess-history");
+    if (guessHistoryEl) {
+      guessHistoryEl.innerHTML = "";
+      player1Guesses.forEach((guess) => {
+        const guessResultEl = document.createElement("li");
+        guessResultEl.innerHTML = `
+          Player 1 | Guess: ${guess.guess} | Correct Numbers: ${guess.correct_numbers}
+          | Correct Positions: ${guess.correct_positions}
+        `;
+        guessHistoryEl.appendChild(guessResultEl);
+      });
+      player2Guesses.forEach((guess) => {
+        const guessResultEl = document.createElement("li");
+        guessResultEl.innerHTML = `
+          Player 2 | Guess: ${guess.guess} | Correct Numbers: ${guess.correct_numbers}
+          | Correct Positions: ${guess.correct_positions}
+        `;
+        guessHistoryEl.appendChild(guessResultEl);
+      });
+    }
+  }
+
+  // Update the remaining guesses for the specific player
+  updateRemainingGuesses(result, player) {
+    console.log("res: ", result, "player: ", player);
+    const remainingGuesses = result[player]?.remaining_guesses;
+    const remainingGuessesEl = document.getElementById(
+      `remaining-guesses-${player}`
+    );
+    if (remainingGuessesEl) {
+      remainingGuessesEl.textContent = remainingGuesses;
+    }
   }
 
   checkGameStatus(gameState) {

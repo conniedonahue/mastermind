@@ -57,16 +57,12 @@ def render_game_page(session_id):
 
     return render_template('game.html', session_id="session", 
                             game_state=session_data['state'], 
-                            is_multiplayer=is_multiplayer   ,
-                            join_link=f"/multiplayer-game/join/{session_id}" if is_multiplayer else None)
-
+                            is_multiplayer=is_multiplayer)
 
 @game_routes.route('/multiplayer-game/<session_id>', methods=['GET'])
 def render_multiplayer_game_page(session_id):
     session_manager = current_app.session_manager
-    print('sessionID: ', session_id)
     session_data = session_manager.get_session(session_id)
-    print("session_data: ", session_data)
     if not session_data:
         return jsonify({"error": "Session not found"}), 404
 
@@ -126,6 +122,8 @@ def get_game_state(session_id):
 def guess(session_id):
     session_manager = current_app.session_manager
     raw_guess = request.form['guess']
+    print('player', request.form.get('player',))  # Default to player1
+
     player = request.form.get('player', 'player1')
     session_data = session_manager.get_session(session_id)
 
@@ -139,8 +137,8 @@ def guess(session_id):
 
         # Update session state
         if player == 'player1' or 'player2' not in session_data['state']:
-            session_data['state']['remaining_guesses'] -= 1
-            session_data['state']['guesses'].append({
+            session_data['state']['player1']['remaining_guesses'] -= 1
+            session_data['state']['player1']['guesses'].append({
                 'guess': guess,
                 'correct_numbers': correct_numbers,
                 'correct_positions': correct_positions
@@ -170,7 +168,7 @@ def guess(session_id):
             if correct_positions == len(session_data['config']['code']):
                 session_data['state']['status'] = 'won'
 
-            if session_data['state']['remaining_guesses'] <= 0:
+            if session_data['state']['player1']['remaining_guesses'] <= 0:
                 session_data['state']['status'] = 'lost'
 
         # Update session

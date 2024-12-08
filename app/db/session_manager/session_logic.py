@@ -12,17 +12,32 @@ def initialize_session(session_manager: SessionManager, session_config: dict) ->
         str: The generated session ID.
     """
 
-    required_keys = ['allowed_attempts', 'code_length', 'wordleify', 'code']
+    required_keys = ['allowed_attempts', 'code_length', 'wordleify', 'multiplayer', 'code']
     missing_keys = [key for key in required_keys if session_config.get(key) is None]
 
     if missing_keys:
         raise ValueError(f"Error adopting config, missing {', '.join(missing_keys)}")
     
-    session_state = {
-        'status': "active",
-        'remaining_guesses': session_config['allowed_attempts'],
-        'guesses': []
-    }
+    if not session_config['multiplayer']:
+        session_state = {
+            'status': 'active',
+             'player1' : {
+                'remaining_guesses': session_config['allowed_attempts'],
+                'guesses': []
+            },
+        }
+    else:
+        session_state = {
+            'status': 'active',
+            'player1' : {
+                'remaining_guesses': session_config['allowed_attempts'],
+                'guesses': []
+            },
+            'player2' : {
+                'remaining_guesses': session_config['allowed_attempts'],
+                'guesses': []
+            }
+        }
 
     session_data = {"config" : session_config, "state" : session_state}
 

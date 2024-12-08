@@ -13,27 +13,57 @@
   {% endif %}
 
   <div class="guess-section">
-    <h2>Enter Your Guess</h2>
+    <h2>Player 1's Guess</h2>
 
-    <form id="guess-form" method="POST">
-      <label for="guess-input"
+    <form id="guess-form-player1">
+      <label for="guess-input-player1"
         >{{ code_length }} numbers between 0 and 7:</label
       >
       <input
         type="text"
-        id="guess-input"
+        id="guess-input-player1"
         name="guess"
         required
         pattern="[0-7]{4}"
         title="Enter exactly {{ code_length }} digits between 0 and 7"
       />
-      <button type="submit" id="guess-submit-btn">Submit Guess</button>
+      <button type="submit" id="guess-submit-btn-player1">Submit Guess</button>
     </form>
 
     {% if remaining_guesses is not none %}
     <div class="game-info">
       Guesses remaining:
-      <span id="remaining-guesses">{{ game_state.remaining_guesses }}</span>
+      <span id="remaining-guesses-player1"
+        >{{ game_state.player1.remaining_guesses }}</span
+      >
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="guess-section">
+    <h2>Player 2's Guess</h2>
+
+    <form id="guess-form-player2">
+      <label for="guess-input-player2">
+        {{ code_length }} numbers between 0 and 7:
+      </label>
+      <input
+        type="text"
+        id="guess-input-player2"
+        name="guess"
+        required
+        pattern="[0-7]{4}"
+        title="Enter exactly {{ code_length }} digits between 0 and 7"
+      />
+      <button type="submit" id="guess-submit-btn-player2">Submit Guess</button>
+    </form>
+
+    {% if game_state.player2_remaining_guesses is not none %}
+    <div class="game-info">
+      Player 2's Guesses remaining:
+      <span id="remaining-guesses-player2"
+        >{{ game_state.player2.remaining_guesses }}</span
+      >
     </div>
     {% endif %}
   </div>
