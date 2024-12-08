@@ -34,6 +34,21 @@
     {% endif %}
   </div>
 
+  {% if is_multiplayer %}
+  <div class="multiplayer-section">
+    <h2>Multiplayer Game</h2>
+
+    {% if 'player2' not in game_state %}
+    <div class="waiting-for-player">
+      Waiting for Player 2 to join... Share this link to invite a friend: {{
+      join_link }}
+    </div>
+    {% else %}
+    <div class="player-status">Player 2 has joined!</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
   <div class="results-section">
     <h2>Results</h2>
     <div id="guess-history" class="results-box">

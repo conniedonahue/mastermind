@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Join Game</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background-color: #f4f4f4;
+      }
+      .container {
+        text-align: center;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+      .btn {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        color: #fff;
+        background-color: #007bff;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .btn:hover {
+        background-color: #0056b3;
+      }
+      input {
+        width: 80%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      label {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Join Game</h1>
+      <p>
+        Welcome! {{session_data}} Join the game using the session ID or by clicking the link
+        below.
+      </p>
+
+      <!-- Display the join link -->
+      <a class="btn" href="/game/{{ session_id }}"
+        >Join Game</a
+      >
+
+      <hr />
+
+      <!-- Option to manually enter the session ID -->
+      <form action="/game/{{session_id}}" method="GET">
+        <label for="session_id">Enter Session ID:</label><br />
+        <input
+          type="text"
+          id="session_id"
+          name="session_id"
+          placeholder="Enter Session ID"
+          required
+        /><br />
+        <button type="submit" class="btn">Join Game</button>
+      </form>
+    </div>
+  </body>
+</html>

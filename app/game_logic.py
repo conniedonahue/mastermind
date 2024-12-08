@@ -21,7 +21,6 @@ def generate_code(code_length=4):
     try:
         response = requests.get(url, params=params)
         response.raise_for_status()
-        print(f"Random number: {response.text}")
         numbers = list(map(int, response.text.split()))
         return numbers
     except requests.exceptions.RequestException as e:

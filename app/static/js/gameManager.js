@@ -3,10 +3,11 @@ class GameManager {
     this.gameState = null;
     this.sessionId = null;
     this.initializeEventListeners();
+    this.isMultiplayer = null;
   }
 
   // Game Initialization Methods
- 
+
   /* Sends config to server
      Receives confirmation
      Redirects to game page
@@ -27,7 +28,12 @@ class GameManager {
       if (data.session_id) {
         this.sessionId = data.session_id;
         this.updateGameUI(data.session_state);
-        window.location.href = `/game/${this.sessionId}`;
+
+        if (data.join_link) {
+          window.location.href = `/game/${this.sessionId}`;
+        } else {
+          window.location.href = `/game/${this.sessionId}`;
+        }
       } else {
         throw new Error("Game creation failed");
       }
@@ -60,7 +66,13 @@ class GameManager {
       const data = await response.json();
 
       this.gameState = data.game_state;
+      this.isMultiplayer = document.body.classList.contains("multiplayer");
+
       this.updateGameUI(this.gameState);
+
+      if (this.isMultiplayer && !this.gameState.player2) {
+        this.startWaitingForPlayer();
+      }
     } catch (error) {
       console.error("Error loading game state:", error);
       this.handleError(error);
@@ -71,12 +83,16 @@ class GameManager {
 
   /**
    * Submits guess to server and updates UI with results
-   * @param {*} event 
+   * @param {*} event
    */
   async submitGuess(event) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
+
+    if (this.isMultiplayer) {
+      formData.append("player", "player1");
+    }
 
     try {
       const response = await fetch(`/game/${this.sessionId}`, {
@@ -95,6 +111,28 @@ class GameManager {
     } catch (error) {
       console.error("Error submitting guess:", error);
       this.handleError(error);
+    }
+  }
+
+  startWaitingForPlayer() {
+    // Add UI for waiting for player 2
+    const waitingSection = document.createElement("div");
+    waitingSection.innerHTML = `
+      <p>Waiting for Player 2 to join...</p>
+      <p>Share this link: ${window.location.href}</p>
+    `;
+    document.getElementById("multiplayer-section").appendChild(waitingSection);
+  }
+
+  handleMultiplayerGameStatus(gameState) {
+    switch (gameState.status) {
+      case "player1_won":
+        alert("You won! Waiting for Player 2 to finish.");
+        break;
+      case "player1_wins_player2_loses":
+        alert("You won! Player 2 did not guess in time.");
+        break;
+      // Add more multiplayer-specific status handlers
     }
   }
 
