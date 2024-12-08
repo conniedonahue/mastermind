@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash, current_app, make_response
-from .game_logic import generate_code, evaluate_guess, clean_and_validate_guess
+from .game_logic import generate_code, evaluate_guess, clean_and_validate_guess, check_win_lose_conditions
 from .db.session_manager import initialize_session
 from app import create_app 
 import uuid
@@ -126,12 +126,13 @@ def guess(session_id):
 
     player = request.form.get('player', 'player1')
     session_data = session_manager.get_session(session_id)
+    code = session_data['config']['code']
 
     try:
         guess = clean_and_validate_guess(raw_guess, session_data['config']['code_length'])
         
         correct_numbers, correct_positions = evaluate_guess(
-            session_data['config']['code'], 
+            code, 
             guess
         )
 
@@ -150,26 +151,27 @@ def guess(session_id):
                 'correct_numbers': correct_numbers,
                 'correct_positions': correct_positions
             })
+        session_data['state']['status'] = check_win_lose_conditions(correct_numbers, correct_positions, session_data, player)
 
-        # Check win/loss conditions
-        if session_data['config'].get('multiplayer', False):
-            player1_won = (correct_positions == len(session_data['config']['code']))
+        # # Check win/loss conditions
+        # if session_data['config'].get('multiplayer', False):
+        #     player1_won = (correct_positions == len(session_data['config']['code']))
             
-            # Check if game is in multiplayer mode and requires both players to guess
-            if player1_won:
-                session_data['state']['status'] = 'player1_wins'
+        #     # Check if game is in multiplayer mode and requires both players to guess
+        #     if player1_won:
+        #         session_data['state']['status'] = 'player1_wins'
                 
-                # If player2 exists, they must also guess correctly to win
-                if 'player2' in session_data['state']:
-                    # If player2 hasn't finished, they lose
-                    if session_data['state']['player2']['remaining_guesses'] <= session_data['state']['player1']['remaining_guesses']:
-                        session_data['state']['status'] = 'player1_wins_player2_loses'
-        else:
-            if correct_positions == len(session_data['config']['code']):
-                session_data['state']['status'] = 'won'
+        #         # If player2 exists, they must also guess correctly to win
+        #         if 'player2' in session_data['state']:
+        #             # If player2 hasn't finished, they lose
+        #             if session_data['state']['player2']['remaining_guesses'] <= session_data['state']['player1']['remaining_guesses']:
+        #                 session_data['state']['status'] = 'player1_wins_player2_loses'
+        # else:
+        #     if correct_positions == len(session_data['config']['code']):
+        #         session_data['state']['status'] = 'won'
 
-            if session_data['state']['player1']['remaining_guesses'] <= 0:
-                session_data['state']['status'] = 'lost'
+        #     if session_data['state']['player1']['remaining_guesses'] <= 0:
+        #         session_data['state']['status'] = 'lost'
 
         # Update session
         session_manager.update_session(session_id, session_data)

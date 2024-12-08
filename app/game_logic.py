@@ -59,3 +59,35 @@ def evaluate_guess(code, guess):
             correct_positions += 1
 
     return correct_numbers, correct_positions
+
+def check_win_lose_conditions(correct_numbers, correct_positions, session_data, player):
+    multiplayer = session_data['config']['multiplayer']
+    code = session_data['config']['code']
+    player1_remaining_guesses = session_data['state']['player1']['remaining_guesses']
+    status = "active"
+
+    print(f"{player}: nums: {correct_numbers}, pos: {correct_positions}")
+
+    if multiplayer:
+        player2_remaining_guesses = session_data['state']['player2']['remaining_guesses']
+
+        won = (correct_positions == len(code))
+        print('won?: ', won)
+            
+        if won:
+            other_player = 'player2' if player == 'player1' else 'player1'
+            status = f"{player}_wins_{other_player}_loses"
+        
+        if player1_remaining_guesses <= 0 and player2_remaining_guesses <= 0:
+            status = 'both_players_lose'
+
+
+    else:
+        if correct_positions == len(session_data['config']['code']):
+            status = 'won'
+
+        if session_data['state']['player1']['remaining_guesses'] <= 0:
+            status = 'lost'
+    
+    print("status: ", status)
+    return status

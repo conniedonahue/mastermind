@@ -95,7 +95,7 @@ class GameManager {
       const data = await response.json();
 
       if (data.result) {
-        this.updateGuessUI(data.result.guesses);
+        this.updateGuessUI(data.result.player1.guesses);
         this.updateGameStateUI(data.result);
       } else if (data.error) {
         throw new Error(data.error);
@@ -114,7 +114,6 @@ class GameManager {
   }
 
   updateRemainingGuesses(gameState) {
-    console.log("remaining GS: ", gameState);
     const remainingGuessesEl = document.getElementById("remaining-guesses");
     if (remainingGuessesEl) {
       remainingGuessesEl.textContent = gameState.player1.remaining_guesses;
@@ -123,7 +122,6 @@ class GameManager {
 
   updateGuessUI(guessData) {
     const guessHistoryEl = document.getElementById("guess-history");
-    console.log("gd: ", guessData);
 
     if (guessHistoryEl) {
       guessHistoryEl.innerHTML = "";
@@ -212,7 +210,6 @@ class MultiplayerGameManager extends GameManager {
     document.getElementById("waiting-section").appendChild(waitingMessage);
 
     const interval = setInterval(async () => {
-      console.log("fetchings");
       try {
         const response = await fetch(`/game/${this.sessionId}/state`);
         const data = await response.json();
@@ -299,7 +296,6 @@ class MultiplayerGameManager extends GameManager {
 
   // Update the remaining guesses for the specific player
   updateRemainingGuesses(result, player) {
-    console.log("res: ", result, "player: ", player);
     const remainingGuesses = result[player]?.remaining_guesses;
     const remainingGuessesEl = document.getElementById(
       `remaining-guesses-${player}`
@@ -329,7 +325,6 @@ class MultiplayerGameManager extends GameManager {
 // Initialize the game manager when the page loads
 document.addEventListener("DOMContentLoaded", () => {
   const gameContainer = document.getElementById("game-container");
-  console.log(gameContainer?.dataset);
   const isMultiplayer = gameContainer?.dataset.isMultiplayer === "True";
   const gameManager = isMultiplayer
     ? new MultiplayerGameManager()
