@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "fallback_key")
@@ -7,12 +9,13 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    
 
 class ProductionConfig(Config):
     DEBUG = False
-    REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-    REDIS_PORT = os.getenv("REDIS_PORT", 6379)
-    REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
+    REDIS_HOST = os.getenv("REDIS_HOST")
+    REDIS_PORT = os.getenv("REDIS_PORT")
+    REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 
 class TestingConfig(Config):
     """Testing configuration."""

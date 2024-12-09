@@ -4,6 +4,9 @@
 dev:
 	FLASK_ENV=development FLASK_APP=run.py flask run
 
+prod:
+	FLASK_ENV=production FLASK_APP=run.py flask run
+
 # Clears the app.log file
 clear-log:
 	@echo "" > app.log
