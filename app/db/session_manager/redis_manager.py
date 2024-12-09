@@ -1,11 +1,15 @@
 from redis import Redis
 from typing import Optional
 from datetime import timedelta
-from .session_manager import SessionManager
+from . import SessionManagerInterface
 import json
 import uuid
 
-class RedisSessionManager(SessionManager):
+import logging
+
+logger = logging.getLogger(__name__)
+
+class RedisSessionManager(SessionManagerInterface):
     """Redis-based session management (for production)."""
 
     def __init__(self, redis_client: Redis, session_timeout: timedelta = timedelta(hours=1)):
@@ -24,12 +28,15 @@ class RedisSessionManager(SessionManager):
     def get_session(self, session_id: str) -> Optional[dict]:
         session_data = self.redis_client.get(session_id)
         if not session_data:
+            logger.warning("Session not found: %s", session_id)
             return None
         return json.loads(session_data)
 
     def update_session(self, session_id: str, updates: dict) -> bool:
+        logger.warning("in update")
         session_data = self.get_session(session_id)
         if not session_data:
+            logger.warning("Session not found: %s", session_id)
             return False
 
         session_data.update(updates)

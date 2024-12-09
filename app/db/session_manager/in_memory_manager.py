@@ -1,11 +1,12 @@
 from typing import Dict, Optional
 from datetime import datetime, timedelta
+from . import SessionManagerInterface
 import uuid
 import logging
 
 logger = logging.getLogger(__name__)
 
-class InMemorySessionManager:
+class InMemorySessionManager(SessionManagerInterface):
 
     _store: Dict[str, Dict] = {}
     SESSION_TIMEOUT = timedelta(hours=1)  # TTL = 1 hour
