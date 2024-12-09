@@ -1,11 +1,14 @@
 import os
 from dotenv import load_dotenv
 
+environment = os.getenv("FLASK_ENV", "development")
+env_file = f".env.{environment}"
+load_dotenv(env_file, override=True)
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "fallback_key")
     SESSION_TIMEOUT = 3600  
-    ENV = os.getenv("ENV", "development")
+    ENV = os.getenv("FLASK_ENV", "development")
 
 class DevelopmentConfig(Config):
     DEBUG = True

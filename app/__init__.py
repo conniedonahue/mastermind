@@ -4,20 +4,12 @@ from dotenv import load_dotenv
 import os
 from .config import DevelopmentConfig, ProductionConfig, TestingConfig
 
-environment = os.getenv("FLASK_ENV", "development")
-env_file = f".env.{environment}"
-load_dotenv(env_file)
-
-print("Environment:", os.getenv("FLASK_ENV"))
-print("Redis Host:", os.getenv("REDIS_HOST"))
-print("Redis Port:", os.getenv("REDIS_PORT"))
-
 def create_app():
     app = Flask(__name__)
+    environment = os.getenv("FLASK_ENV", "development")
 
-    if os.getenv("FLASK_ENV") == "production":
+    if environment == 'production':
         app.config.from_object(ProductionConfig)
-        print("App Config:", app.config)
         redis_client = Redis(
             host=app.config["REDIS_HOST"],
             port=app.config["REDIS_PORT"],
@@ -37,7 +29,7 @@ def create_app():
 
         from app.db.session_manager import RedisSessionManager as Session_Manager
         app.session_manager = Session_Manager(redis_client)
-    elif os.getenv("FLASK_ENV") == "testing":
+    elif environment == 'testing':
         app.config.from_object(TestingConfig)
         from app.db.session_manager import InMemorySessionManager as Session_Manager
         app.session_manager = Session_Manager
