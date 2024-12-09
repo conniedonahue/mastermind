@@ -1,44 +1,51 @@
-# from redis import Redis
-# from typing import Optional
-# from datetime import timedelta
-# from .session_manager import SessionManager
-# import json
-# import uuid
+from redis import Redis
+from typing import Optional
+from datetime import timedelta
+from . import SessionManagerInterface
+import json
+import uuid
 
-# class RedisSessionManager(SessionManager):
-#     """Redis-based session management (for production)."""
+import logging
 
-#     def __init__(self, redis_client: Redis, session_timeout: timedelta = timedelta(hours=1)):
-#         self.redis_client = redis_client
-#         self.session_timeout = session_timeout
+logger = logging.getLogger(__name__)
 
-#     def create_session(self, data: dict) -> str:
-#         session_id = str(uuid.uuid4())
-#         self.redis_client.setex(
-#             session_id,
-#             self.session_timeout,
-#             json.dumps(data)
-#         )
-#         return session_id
+class RedisSessionManager(SessionManagerInterface):
+    """Redis-based session management (for production)."""
 
-#     def get_session(self, session_id: str) -> Optional[dict]:
-#         session_data = self.redis_client.get(session_id)
-#         if not session_data:
-#             return None
-#         return json.loads(session_data)
+    def __init__(self, redis_client: Redis, session_timeout: timedelta = timedelta(hours=1)):
+        self.redis_client = redis_client
+        self.session_timeout = session_timeout
 
-#     def update_session(self, session_id: str, updates: dict) -> bool:
-#         session_data = self.get_session(session_id)
-#         if not session_data:
-#             return False
+    def create_session(self, data: dict) -> str:
+        session_id = str(uuid.uuid4())
+        self.redis_client.setex(
+            session_id,
+            self.session_timeout,
+            json.dumps(data)
+        )
+        return session_id
 
-#         session_data.update(updates)
-#         self.redis_client.setex(
-#             session_id,
-#             self.session_timeout,
-#             json.dumps(session_data)
-#         )
-#         return True
+    def get_session(self, session_id: str) -> Optional[dict]:
+        session_data = self.redis_client.get(session_id)
+        if not session_data:
+            logger.warning("Session not found: %s", session_id)
+            return None
+        return json.loads(session_data)
 
-#     def delete_session(self, session_id: str) -> None:
-#         self.redis_client.delete(session_id)
+    def update_session(self, session_id: str, updates: dict) -> bool:
+        logger.warning("in update")
+        session_data = self.get_session(session_id)
+        if not session_data:
+            logger.warning("Session not found: %s", session_id)
+            return False
+
+        session_data.update(updates)
+        self.redis_client.setex(
+            session_id,
+            self.session_timeout,
+            json.dumps(session_data)
+        )
+        return True
+
+    def delete_session(self, session_id: str) -> None:
+        self.redis_client.delete(session_id)

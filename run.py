@@ -10,7 +10,6 @@ load_dotenv(env_file)
 setup_logging()
 
 app = create_app()
-app.secret_key = os.getenv('SECRET_KEY', 'fallback_key')
 
 if environment == "production" and not os.getenv("SECRET_KEY"):
     raise RuntimeError("SECRET_KEY must be set in production!")
