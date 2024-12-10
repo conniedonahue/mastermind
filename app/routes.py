@@ -1,7 +1,11 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash, current_app, make_response
 from .game_logic import generate_code, evaluate_guess, clean_and_validate_guess, check_win_lose_conditions
 from .db.session_manager import initialize_session
+from .db.user_db.models import User
+from .db.user_db.service import UserService
+from sqlalchemy import select
 from app import create_app 
+import asyncio
 import logging
 import uuid
 
@@ -19,6 +23,51 @@ def create_game():
     logger.debug("Creating game with form data: %s", request.form.to_dict())
     try: 
         session_manager = current_app.session_manager
+
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        user_service = UserService(current_app.db_manager)
+        
+        user_id = user_service.create_or_get_user(
+            username=request.form.get('username')
+        )
+
+        # async def create_or_get_user(db_manager):
+        #     # Create a new event loop for each async operation
+        #     loop = asyncio.new_event_loop()
+        #     asyncio.set_event_loop(loop)
+            
+        #     try:
+        #         async with db_manager.get_session() as session:
+        #             async with session.begin():
+        #                 stmt = select(User).where(User.username == username)
+        #                 result = await session.execute(stmt)
+        #                 user = result.scalar_one_or_none()
+                        
+        #                 if not user:
+        #                     user = User.create_user(username, email, password)
+        #                     session.add(user)
+        #                     logger.info(f"Created new user: {username}")
+        #                 else:
+        #                     logger.info(f"Found existing user: {username}")
+                        
+        #                 # Make sure to wait for commit
+        #                 await session.commit()
+        #                 return user.id
+        #     finally:
+        #         loop.close()
+        #         asyncio.set_event_loop(None)
+
+        # # Run in a new thread with its own event loop
+        # from concurrent.futures import ThreadPoolExecutor
+        # with ThreadPoolExecutor() as pool:
+        #     future = pool.submit(asyncio.run, create_or_get_user(current_app.db_manager))
+        #     user_id = future.result()
+
+
+
         # Extract data from the request
         allowed_attempts = int(request.form.get('allowed_attempts', 10))
         code_length = int(request.form.get('code_length', 4))
@@ -32,7 +81,8 @@ def create_game():
             'code_length': code_length,
             'wordleify': wordleify,
             'multiplayer': multiplayer,
-            'code': [0, 0 , 0 ,0]
+            'code': [0, 0 , 0 ,0],
+            'user_id': user_id
         }
 
         logger.debug("Game config:  %s", config)

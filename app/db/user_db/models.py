@@ -10,10 +10,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     username = Column(String(50), unique=True, nullable=False)
-    email = Column(String(120), unique=True, nullable=False)
-    
-    password_hash = Column(String(255), nullable=False)
-    salt = Column(String(32), nullable=False)
+   
     
     # Game statistics
     games_won = Column(Integer, default=0)
@@ -21,12 +18,11 @@ class User(Base):
     total_games_played = Column(Integer, default=0)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    last_login = Column(DateTime(timezone=True), nullable=True)
 
     @classmethod
-    def create_user(cls, username, email, password):
+    def create_user(cls, username):
         """
-        Create a new user with secure password hashing
+        Create a new user
         
         Args:
             username (str): User's chosen username
@@ -42,9 +38,6 @@ class User(Base):
         
         return cls(
             username=username,
-            email=email,
-            password_hash=password_hash,
-            salt=salt,
             games_won=0,
             games_lost=0,
             total_games_played=0
