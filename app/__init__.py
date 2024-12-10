@@ -3,11 +3,11 @@ from redis import Redis, RedisError
 from dotenv import load_dotenv
 import os
 from .config import DevelopmentConfig, ProductionConfig, TestingConfig
-from .db.user_db.manager import DatabaseManager, UserStatUpdateQueue
+from .db.user_db.manager import DatabaseManager
+from .db.user_db.update_queue import UserStatUpdateQueue
 from .db.user_db.models import Base
 import logging
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -15,34 +15,38 @@ def init_async_components(app):
     """Initialize async database components"""
     db_url = app.config['SQLALCHEMY_DATABASE_URI']
     
-    # Create event loop in a separate thread
-    loop = asyncio.new_event_loop()
+    # Set up the event loop
+    if asyncio.get_event_loop().is_closed():
+        asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.get_event_loop()
     
     # Initialize database manager
     db_manager = DatabaseManager(db_url)
     loop.run_until_complete(db_manager.init_db())
     
-    # Create and start update queue
+    # Create queue manager (but don't start workers yet)
     update_queue = UserStatUpdateQueue(db_manager)
-    loop.run_until_complete(update_queue.start())
     
     # Store components in app context
     app.db_manager = db_manager
     app.update_queue = update_queue
-    app.loop = loop
-    app.executor = ThreadPoolExecutor()
     
     logger.info("Async database components initialized successfully")
 
 def cleanup_async_components(app):
     """Cleanup async components on shutdown"""
     if hasattr(app, 'update_queue'):
-        app.loop.run_until_complete(app.update_queue.stop())
-    if hasattr(app, 'executor'):
-        app.executor.shutdown(wait=True)
-    if hasattr(app, 'loop'):
-        app.loop.close()
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_closed():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            # Stop any running workers
+            loop.run_until_complete(app.update_queue.stop())
+        except Exception as e:
+            logger.error(f"Error during cleanup: {e}")
     logger.info("Async components cleaned up successfully")
+
 
 def create_app():
     app = Flask(__name__)
