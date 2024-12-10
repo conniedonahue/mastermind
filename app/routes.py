@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash, current_app, make_response
 from .game_logic import generate_code, evaluate_guess, clean_and_validate_guess, check_win_lose_conditions
 from .db.session_manager import initialize_session
-from .db.user_db.models import User
 from .db.user_db.service import UserService
 from sqlalchemy import select
 from app import create_app 
@@ -31,24 +30,6 @@ def create_game():
         )
         config['player_info']['player1']['user_id'] = user_id
         config['code'] = [0,0,0,0]
-
-
-        # Extract data from the request
-        # allowed_attempts = int(request.form.get('allowed_attempts', 10))
-        # code_length = int(request.form.get('code_length', 4))
-        # wordleify = 'wordleify' in request.form
-        # multiplayer = 'multiplayer' in request.form
-
-        # code = generate_code(code_length)
-
-        # config = {
-        #     'allowed_attempts': allowed_attempts,
-        #     'code_length': code_length,
-        #     'wordleify': wordleify,
-        #     'multiplayer': multiplayer,
-        #     'code': [0, 0 , 0 ,0],
-        #     'user_id': user_id
-        # }
 
         logger.debug("Game config:  %s", config)
 

@@ -15,15 +15,15 @@ def init_components(app):
     """Initialize async database components"""
     db_url = app.config['SQLALCHEMY_DATABASE_URI']
     
-    # Initialize DB manager and Queue
+    # Initialize DB manager and Queue synchronously
     db_manager = DatabaseManager(db_url)
-    db_manager.init_db()
+    db_manager.init_db()  # Synchronous DB initialization
     update_queue = UserStatUpdateQueue(db_manager)
     
     # Store components in app context
     app.db_manager = db_manager
     app.update_queue = update_queue
-    logger.info("Async database components initialized successfully")
+    logger.info("Synchronous database components initialized successfully")
 
 def cleanup_components(app):
     """

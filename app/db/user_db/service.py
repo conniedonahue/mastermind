@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from .models import User
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,6 +9,19 @@ logger = logging.getLogger(__name__)
 class UserService:
     def __init__(self, db_manager):
         self.db_manager = db_manager
+
+    def test_db_connection(self):
+        """Test if the database connection is working."""
+        try:
+            with self.db_manager.get_session() as session:
+                # Attempt a simple query to check the connection
+                stmt = select(User).limit(1)  # Query a small part of the User table
+                session.execute(stmt)
+            logger.info("Database connection is successful.")
+            return True
+        except OperationalError as e:
+            logger.error(f"Database connection failed: {e}")
+            return False
 
     def get_user_by_username(self, username: str) -> User:
         """
@@ -56,8 +69,9 @@ class UserService:
             User.id (int)
         
         Raises:
-            RuntimeError: If unable to establish a connection to Redis
+            RuntimeError: 
         """
+        logger.info('Fetching or creating user')
         with self.db_manager.get_session() as session:
             try:
                 stmt = select(User).where(User.username == username)
