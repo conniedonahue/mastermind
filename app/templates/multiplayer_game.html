@@ -8,6 +8,8 @@
 
   <hr />
 
+  <h2>Multiplayer Game</h2>
+
   {% if error_message %}
   <div class="error">{{ error_message }}</div>
   {% endif %}
@@ -61,15 +63,14 @@
     {% if game_state.player2_remaining_guesses is not none %}
     <div class="game-info">
       Player 2's Guesses remaining:
-      <span id="remaining-guesses-player2"
-        >{{ game_state.player2.remaining_guesses }}</span
+      <span id="remaining-guesses-player2">
+        {{ game_state.player1.remaining_guesses }}</span
       >
     </div>
     {% endif %}
   </div>
 
   <div class="multiplayer-section" id="multiplayer-section">
-    <h2>Multiplayer Game</h2>
     <div id="waiting-section"></div>
   </div>
 

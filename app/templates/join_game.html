@@ -58,7 +58,7 @@
       <hr />
 
       <!-- Option to manually enter the session ID -->
-      <form action="/multiplayer-game/join/{{ session_id }}" method="POST">
+      <form action="/game/join/{{ session_id }}" method="POST">
         <label for="player2">Enter Name:</label><br />
         <input
           type="text"
@@ -82,7 +82,7 @@
         const sessionId = "{{ session_id }}";
 
         try {
-          const response = await fetch(`/multiplayer-game/join/${sessionId}/`, {
+          const response = await fetch(`/game/join/${sessionId}/`, {
             method: "POST",
             body: formData,
           });
@@ -90,7 +90,7 @@
           const data = await response.json();
 
           if (response.ok) {
-            window.location.href = `/multiplayer-game/${sessionId}`;
+            window.location.href = `/game/${sessionId}`;
           } else {
             alert(data.error || "An error occurred while joining the game.");
           }

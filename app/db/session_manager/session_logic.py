@@ -28,12 +28,8 @@ def initialize_session(session_manager: SessionManager, session_config: dict) ->
         }
     else:
         session_state = {
-            'status': 'active',
+            'status': 'active_waiting',
             'player1' : {
-                'remaining_guesses': session_config['allowed_attempts'],
-                'guesses': []
-            },
-            'player2' : {
                 'remaining_guesses': session_config['allowed_attempts'],
                 'guesses': []
             }
@@ -41,7 +37,6 @@ def initialize_session(session_manager: SessionManager, session_config: dict) ->
 
     session_data = {"config" : session_config, "state" : session_state}
 
-    print('session_data in logic: ', session_data)
 
     session_id = session_manager.create_session(session_data)
     return session_id, session_state

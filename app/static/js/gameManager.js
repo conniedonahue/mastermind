@@ -273,7 +273,7 @@ class MultiplayerGameManager extends GameManager {
     const player2Guesses = result.player2?.guesses;
     const guesses = player1Guesses.concat(player2Guesses);
     const guessHistoryEl = document.getElementById("guess-history");
-    if (guessHistoryEl) {
+    if (guessHistoryEl && player2Guesses) {
       guessHistoryEl.innerHTML = "";
       player1Guesses.forEach((guess) => {
         const guessResultEl = document.createElement("li");

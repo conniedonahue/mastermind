@@ -27,8 +27,7 @@ class InMemorySessionManager(SessionManagerInterface):
             'id': session_id,
             'created_at': datetime.now(),
             'last_accessed': datetime.now(),
-            'data': data,
-            'status': 'active'
+            'data': data
         }
         logger.info("Creating session: %s", session_id)
         cls._store[session_id] = session_data
@@ -48,6 +47,7 @@ class InMemorySessionManager(SessionManagerInterface):
             Optional[dict]: Session data or None if expired/not found
         """
         session = cls._store.get(session_id)
+        logger.info("retrieving session: %s", session)
         
         if not session:
             logger.warning("Session not found: %s", session_id)

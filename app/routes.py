@@ -37,7 +37,6 @@ def create_game():
 
         logger.debug("Game config:  %s", config)
 
-        print("config: ", config)
 
         # Initialize session
         session_id, session_state = initialize_session(session_manager, config)
@@ -93,7 +92,7 @@ def render_game_page(session_id):
 #                             is_multiplayer=is_multiplayer   ,
 #                             join_link=f"/game/join/{session_id}" if is_multiplayer else None)
 
-@game_routes.route('/multiplayer-game/join/<session_id>', methods=['GET'])
+@game_routes.route('/game/join/<session_id>', methods=['GET'])
 def render_join_page(session_id):
     session_manager = current_app.session_manager
     session_data = session_manager.get_session(session_id)
@@ -104,7 +103,7 @@ def render_join_page(session_id):
 
     return render_template('join_game.html', session_id=session_id, session_data=session_data)
 
-@game_routes.route('/multiplayer-game/join/<session_id>/', methods=['POST'])
+@game_routes.route('/game/join/<session_id>/', methods=['POST'])
 def join_multiplayer_game(session_id):
     logger.info("Player attempting to join multiplayer game: %s", session_id)
 
@@ -116,7 +115,7 @@ def join_multiplayer_game(session_id):
         return jsonify({"error": "Game not found or not multiplayer"}), 404
 
     # Add player 2 to the session
-    if 'player2' not in session_data['state']:
+    if "player2" not in session_data['state']:
         player2_name = request.form.get('player2_name', 'Player 2')
         logger.info("Adding %s to the game", player2_name)
         session_data['state']['player2'] = {
@@ -124,6 +123,7 @@ def join_multiplayer_game(session_id):
             'remaining_guesses': session_data['config']['allowed_attempts'],
             'guesses': []
         }
+        session_data['state']['status'] = 'active'
         session_manager.update_session(session_id, session_data)
         logger.info("%s joined game %s successfully", player2_name, session_id )
         return jsonify({"message": f"{player2_name} joined game successfully"}), 200
@@ -183,27 +183,6 @@ def guess(session_id):
             })
         session_data['state']['status'] = check_win_lose_conditions(correct_numbers, correct_positions, session_data, player)
 
-        # # Check win/loss conditions
-        # if session_data['config'].get('multiplayer', False):
-        #     player1_won = (correct_positions == len(session_data['config']['code']))
-            
-        #     # Check if game is in multiplayer mode and requires both players to guess
-        #     if player1_won:
-        #         session_data['state']['status'] = 'player1_wins'
-                
-        #         # If player2 exists, they must also guess correctly to win
-        #         if 'player2' in session_data['state']:
-        #             # If player2 hasn't finished, they lose
-        #             if session_data['state']['player2']['remaining_guesses'] <= session_data['state']['player1']['remaining_guesses']:
-        #                 session_data['state']['status'] = 'player1_wins_player2_loses'
-        # else:
-        #     if correct_positions == len(session_data['config']['code']):
-        #         session_data['state']['status'] = 'won'
-
-        #     if session_data['state']['player1']['remaining_guesses'] <= 0:
-        #         session_data['state']['status'] = 'lost'
-
-        # Update session
         session_manager.update_session(session_id, session_data)
         logger.info("Updated game state for session %s", session_id)
         return jsonify({

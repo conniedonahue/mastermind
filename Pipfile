@@ -8,6 +8,7 @@ flask = "*"
 requests = "*"
 python-dotenv = "*"
 redis = "*"
+gunicorn = "*"
 
 [dev-packages]
 pytest = "*"
