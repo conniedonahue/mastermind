@@ -1,14 +1,28 @@
 import pytest
 from app import create_app
 from app.config import TestingConfig
+from app.db.user_db_manager import engine, Base, Session
 
-@pytest.fixture
+
+@pytest.fixture(scope="session")
 def app():
     """Create and configure a new app instance for testing."""
     app = create_app()
     app.config.from_object(TestingConfig)
+    Base.metadata.create_all(engine)
     with app.app_context():
         yield app
+    Base.metadata.drop_all(engine)
+
+@pytest.fixture(scope="function")
+def db_session(app):
+    connection = engine.connect()
+    transaction = connection.begin()
+    session = Session()
+    yield session
+    transaction.rollback()
+    connection.close()
+    Session.remove()
 
 @pytest.fixture
 def client(app):

@@ -3,6 +3,8 @@ from redis import Redis, RedisError
 from dotenv import load_dotenv
 import os
 from .config import DevelopmentConfig, ProductionConfig, TestingConfig
+from .db.user_db.manager import init_db
+from .db.user_db.models import Base
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,6 +31,7 @@ def create_app():
 
     from .routes import game_routes
     app.register_blueprint(game_routes)
+    engine = init_db(app)
 
     return app
 
