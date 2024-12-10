@@ -3,11 +3,46 @@ from redis import Redis, RedisError
 from dotenv import load_dotenv
 import os
 from .config import DevelopmentConfig, ProductionConfig, TestingConfig
-from .db.user_db.manager import init_db
+from .db.user_db.manager import DatabaseManager, UserStatUpdateQueue
 from .db.user_db.models import Base
 import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
+
+def init_async_components(app):
+    """Initialize async database components"""
+    db_url = app.config['SQLALCHEMY_DATABASE_URI']
+    
+    # Create event loop in a separate thread
+    loop = asyncio.new_event_loop()
+    
+    # Initialize database manager
+    db_manager = DatabaseManager(db_url)
+    loop.run_until_complete(db_manager.init_db())
+    
+    # Create and start update queue
+    update_queue = UserStatUpdateQueue(db_manager)
+    loop.run_until_complete(update_queue.start())
+    
+    # Store components in app context
+    app.db_manager = db_manager
+    app.update_queue = update_queue
+    app.loop = loop
+    app.executor = ThreadPoolExecutor()
+    
+    logger.info("Async database components initialized successfully")
+
+def cleanup_async_components(app):
+    """Cleanup async components on shutdown"""
+    if hasattr(app, 'update_queue'):
+        app.loop.run_until_complete(app.update_queue.stop())
+    if hasattr(app, 'executor'):
+        app.executor.shutdown(wait=True)
+    if hasattr(app, 'loop'):
+        app.loop.close()
+    logger.info("Async components cleaned up successfully")
 
 def create_app():
     app = Flask(__name__)
@@ -31,7 +66,14 @@ def create_app():
 
     from .routes import game_routes
     app.register_blueprint(game_routes)
-    engine = init_db(app)
+
+    # Initialize async components
+    init_async_components(app)
+
+    # Register cleanup
+    @app.teardown_appcontext
+    def shutdown_async(exception=None):
+        cleanup_async_components(app)
 
     return app
 
