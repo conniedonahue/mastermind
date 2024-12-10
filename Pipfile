@@ -10,6 +10,9 @@ python-dotenv = "*"
 redis = "*"
 
 [dev-packages]
+pytest = "*"
+pytest-mock = "*"
+pytest-dotenv = "*"
 
 [requires]
 python_version = "3.12"
