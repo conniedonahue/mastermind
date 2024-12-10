@@ -33,7 +33,6 @@ class RedisSessionManager(SessionManagerInterface):
         return json.loads(session_data)
 
     def update_session(self, session_id: str, updates: dict) -> bool:
-        logger.warning("in update")
         session_data = self.get_session(session_id)
         if not session_data:
             logger.warning("Session not found: %s", session_id)
