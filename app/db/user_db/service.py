@@ -10,11 +10,9 @@ class UserService:
     def __init__(self, db_manager):
         self.db_manager = db_manager
 
-    def _get_user_by_username(self, username: str) -> User:
-
+    def get_user_by_username(self, username: str) -> User:
         """
-        Retrieve a user by username. If the user doesn't exist, it creates one
-        (This is here mostly to make the workflow easier before auth)
+        Retrieve a user by username.
         
         Args:
             username (str)
@@ -30,7 +28,7 @@ class UserService:
             result = session.execute(stmt)
             return result.scalar_one_or_none()
 
-    def _update_user_game_stats(self, username: str, won: bool) -> None:
+    def update_user_game_stats(self, username: str, won: bool) -> None:
         """Update a user's game statistics synchronously"""
         with self.db_manager.get_session() as session:
             try:
