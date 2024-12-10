@@ -70,7 +70,7 @@ def evaluate_guess(code, guess):
     logger.info("Evaluation result: correct_numbers = %d, correct_positions = %d", correct_numbers, correct_positions)
     return correct_numbers, correct_positions
 
-def check_win_lose_conditions(correct_numbers, correct_positions, session_data, player):
+def check_win_lose_conditions(correct_numbers, correct_positions, session_data, player, user_service):
     logger.debug("Checking win/lose conditions for player: %s", player)
     multiplayer = session_data['config']['multiplayer']
     code = session_data['config']['code']
@@ -89,6 +89,7 @@ def check_win_lose_conditions(correct_numbers, correct_positions, session_data, 
             other_player = 'player2' if player == 'player1' else 'player1'
             status = f"{player}_wins_{other_player}_loses"
             logger.info("Player %s wins, status set to %s", player, status)
+            
         
         if player1_remaining_guesses <= 0 and player2_remaining_guesses <= 0:
             status = 'both_players_lose'

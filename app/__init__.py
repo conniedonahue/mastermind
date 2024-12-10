@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from .config import DevelopmentConfig, ProductionConfig, TestingConfig
 from .db.user_db.manager import DatabaseManager
+from .db.user_db.service import UserService
 from .db.user_db.update_queue import UserStatUpdateQueue
 from .db.user_db.models import Base
 import logging
@@ -17,11 +18,12 @@ def init_components(app):
     
     # Initialize DB manager and Queue synchronously
     db_manager = DatabaseManager(db_url)
-    db_manager.init_db()  # Synchronous DB initialization
+    db_manager.init_db()
     update_queue = UserStatUpdateQueue(db_manager)
     
     # Store components in app context
     app.db_manager = db_manager
+    app.user_service = UserService(app.db_manager)
     app.update_queue = update_queue
     logger.info("Synchronous database components initialized successfully")
 

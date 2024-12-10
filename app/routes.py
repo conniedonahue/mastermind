@@ -24,7 +24,7 @@ def create_game():
         session_manager = current_app.session_manager
         config = extract_game_data(request.form)
 
-        user_service = UserService(current_app.db_manager)
+        user_service = current_app.user_service
         user_id = user_service.create_or_get_user(
             username=config['player_info']['player1']['username']
         )
@@ -127,6 +127,7 @@ def get_game_state(session_id):
 def guess(session_id):
     logger.info("Player %s making a guess for session %s", request.form.get('player', 'player1'), session_id)
     session_manager = current_app.session_manager
+    user_service = current_app.user_service
     raw_guess = request.form['guess']
     logger.debug("Raw guess: %s", raw_guess)
 
@@ -160,7 +161,7 @@ def guess(session_id):
                 'correct_numbers': correct_numbers,
                 'correct_positions': correct_positions
             })
-        session_data['state']['status'] = check_win_lose_conditions(correct_numbers, correct_positions, session_data, player)
+        session_data['state']['status'] = check_win_lose_conditions(correct_numbers, correct_positions, session_data, player, user_service)
 
         session_manager.update_session(session_id, session_data)
         logger.info("Updated game state for session %s", session_id)
