@@ -79,7 +79,17 @@ def create_app():
     def shutdown_async(exception=None):
         cleanup_async_components(app)
 
+    @app.shell_context_processor
+    def make_shell_context():
+        return {
+            'app': app,
+            'db_manager': app.db_manager,
+            'update_queue': app.update_queue
+        }
+
     return app
+
+    
 
 def create_redis_client(config):
     """

@@ -42,7 +42,8 @@ class UserStatUpdateQueue:
                     continue
                 
                 # Process the update
-                async with self.db_manager.get_session() as session:
+                session = await self.db_manager.get_session()
+                async with session:
                     try:
                         user = await session.get(User, username)
                         if user:
