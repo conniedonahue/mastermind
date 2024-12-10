@@ -20,11 +20,9 @@ def init_async_components(app):
         asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     
-    # Initialize database manager
+    # Initialize DB manager and Queue
     db_manager = DatabaseManager(db_url)
     loop.run_until_complete(db_manager.init_db())
-    
-    # Create queue manager (but don't start workers yet)
     update_queue = UserStatUpdateQueue(db_manager)
     
     # Store components in app context
@@ -34,17 +32,20 @@ def init_async_components(app):
     logger.info("Async database components initialized successfully")
 
 def cleanup_async_components(app):
-    """Cleanup async components on shutdown"""
+    """
+    Cleanup async components on shutdown
+    
+    If the update_queue exists, this shuts down any workers
+    """
     if hasattr(app, 'update_queue'):
         try:
             loop = asyncio.get_event_loop()
-            if loop.is_closed():
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            # Stop any running workers
-            loop.run_until_complete(app.update_queue.stop())
+            if loop.is_running():
+                loop.create_task(app.update_queue.stop())
+            else:
+                loop.run_until_complete(app.update_queue.stop())
         except Exception as e:
-            logger.error(f"Error during cleanup: {e}")
+            logger.error("Error during cleanup: %s", e)
     logger.info("Async components cleaned up successfully")
 
 
@@ -71,13 +72,16 @@ def create_app():
     from .routes import game_routes
     app.register_blueprint(game_routes)
 
-    # Initialize async components
     init_async_components(app)
 
-    # Register cleanup
     @app.teardown_appcontext
     def shutdown_async(exception=None):
         cleanup_async_components(app)
+        asyncio.run(cleanup_async_resources(app))
+
+    async def cleanup_async_resources(app):
+        if hasattr(app, 'async_engine'):
+            await close_async_connections(app.async_engine)
 
     @app.shell_context_processor
     def make_shell_context():

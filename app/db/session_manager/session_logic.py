@@ -22,6 +22,7 @@ def initialize_session(session_manager: SessionManager, session_config: dict) ->
         session_state = {
             'status': 'active',
              'player1' : {
+                'username': session_config['player_info']['player1']['username'],
                 'remaining_guesses': session_config['allowed_attempts'],
                 'guesses': []
             },
@@ -30,6 +31,7 @@ def initialize_session(session_manager: SessionManager, session_config: dict) ->
         session_state = {
             'status': 'active_waiting',
             'player1' : {
+                'username': session_config['player_info']['player1']['username'],
                 'remaining_guesses': session_config['allowed_attempts'],
                 'guesses': []
             }

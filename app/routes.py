@@ -23,67 +23,32 @@ def create_game():
     logger.debug("Creating game with form data: %s", request.form.to_dict())
     try: 
         session_manager = current_app.session_manager
-
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
+        config = extract_game_data(request.form)
 
         user_service = UserService(current_app.db_manager)
-        
         user_id = user_service.create_or_get_user(
-            username=request.form.get('username')
+            username=config['player_info']['player1']['username']
         )
-
-        # async def create_or_get_user(db_manager):
-        #     # Create a new event loop for each async operation
-        #     loop = asyncio.new_event_loop()
-        #     asyncio.set_event_loop(loop)
-            
-        #     try:
-        #         async with db_manager.get_session() as session:
-        #             async with session.begin():
-        #                 stmt = select(User).where(User.username == username)
-        #                 result = await session.execute(stmt)
-        #                 user = result.scalar_one_or_none()
-                        
-        #                 if not user:
-        #                     user = User.create_user(username, email, password)
-        #                     session.add(user)
-        #                     logger.info(f"Created new user: {username}")
-        #                 else:
-        #                     logger.info(f"Found existing user: {username}")
-                        
-        #                 # Make sure to wait for commit
-        #                 await session.commit()
-        #                 return user.id
-        #     finally:
-        #         loop.close()
-        #         asyncio.set_event_loop(None)
-
-        # # Run in a new thread with its own event loop
-        # from concurrent.futures import ThreadPoolExecutor
-        # with ThreadPoolExecutor() as pool:
-        #     future = pool.submit(asyncio.run, create_or_get_user(current_app.db_manager))
-        #     user_id = future.result()
-
+        config['player_info']['player1']['user_id'] = user_id
+        config['code'] = [0,0,0,0]
 
 
         # Extract data from the request
-        allowed_attempts = int(request.form.get('allowed_attempts', 10))
-        code_length = int(request.form.get('code_length', 4))
-        wordleify = 'wordleify' in request.form
-        multiplayer = 'multiplayer' in request.form
+        # allowed_attempts = int(request.form.get('allowed_attempts', 10))
+        # code_length = int(request.form.get('code_length', 4))
+        # wordleify = 'wordleify' in request.form
+        # multiplayer = 'multiplayer' in request.form
 
         # code = generate_code(code_length)
 
-        config = {
-            'allowed_attempts': allowed_attempts,
-            'code_length': code_length,
-            'wordleify': wordleify,
-            'multiplayer': multiplayer,
-            'code': [0, 0 , 0 ,0],
-            'user_id': user_id
-        }
+        # config = {
+        #     'allowed_attempts': allowed_attempts,
+        #     'code_length': code_length,
+        #     'wordleify': wordleify,
+        #     'multiplayer': multiplayer,
+        #     'code': [0, 0 , 0 ,0],
+        #     'user_id': user_id
+        # }
 
         logger.debug("Game config:  %s", config)
 
@@ -92,8 +57,7 @@ def create_game():
         session_id, session_state = initialize_session(session_manager, config)
         logger.info("Session created successfully with session ID: %s", session_id)
 
-
-        join_link = f"/game/join/{session_id}" if multiplayer else None
+        join_link = f"/game/join/{session_id}" if config['multiplayer'] else None
 
         return jsonify({
             'message': 'Game created successfully!',
@@ -125,22 +89,6 @@ def render_game_page(session_id):
                             is_multiplayer=is_multiplayer,
                             join_link=f"/game/join/{session_id}" if is_multiplayer else None)
 
-# @game_routes.route('/multiplayer-game/<session_id>', methods=['GET'])
-# def render_multiplayer_game_page(session_id):
-#     session_manager = current_app.session_manager
-#     session_data = session_manager.get_session(session_id)
-#     if not session_data:
-#         return jsonify({"error": "Session not found"}), 404
-
-#     is_multiplayer = session_data['config'].get('multiplayer', False)
-#     template = 'multiplayer_game.html' if is_multiplayer else 'game.html'
-
-
-#     return render_template(template, 
-#                             session_id="session", 
-#                             game_state=session_data['state'], 
-#                             is_multiplayer=is_multiplayer   ,
-#                             join_link=f"/game/join/{session_id}" if is_multiplayer else None)
 
 @game_routes.route('/game/join/<session_id>', methods=['GET'])
 def render_join_page(session_id):
@@ -242,3 +190,23 @@ def guess(session_id):
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
 
+def extract_game_data(form):
+    """
+    Helper function to extract game-related data from Reqeuest.
+
+    Args:
+        form (ImmutableMultiDict): Game config data from request.
+
+    Returns:
+        dict: game-related data.
+    """
+    return {
+        'player_info': {
+            'player1' : {
+               'username': form.get('username')}
+            },
+        'allowed_attempts': int(form.get('allowed_attempts', 10)),
+        'code_length': int(form.get('code_length', 4)),
+        'wordleify': 'wordleify' in form,
+        'multiplayer': 'multiplayer' in form,
+    }
