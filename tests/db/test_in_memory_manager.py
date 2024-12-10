@@ -7,7 +7,6 @@ from app.db.session_manager import InMemorySessionManager
 def test_in_memory_session_manager_create_and_get_session(app):
     test_data = {"test": "data"}
     session_id = InMemorySessionManager.create_session(test_data)
-    
     assert session_id is not None
     assert isinstance(session_id, str)
     
@@ -20,21 +19,20 @@ def test_in_memory_session_manager_update_session(app):
     
     update_data = {"updated": "info"}
     result = InMemorySessionManager.update_session(session_id, update_data)
-    
     assert result is True
     
     retrieved_session = InMemorySessionManager.get_session(session_id)
     assert retrieved_session == {**initial_data, **update_data}
 
-def test_in_memory_session_manager_session_expiration(app):
-    # Shortening SESSION_TIMEOUT for testing
-    with patch.object(InMemorySessionManager, 'SESSION_TIMEOUT', timedelta(seconds=1)):
+def test_in_memory_session_manager_session_expiration(app, mocker):
+    # Shortening SESSION_TIMEOUT for this test
+    with patch.object(InMemorySessionManager, 'SESSION_TIMEOUT', timedelta(seconds=.05)):
         
         test_data = {"test": "data"}
         session_id = InMemorySessionManager.create_session(test_data)
         
         # Wait for session to expire
-        time.sleep(2)
+        time.sleep(.06)
         
         retrieved_session = InMemorySessionManager.get_session(session_id)
         assert retrieved_session is None

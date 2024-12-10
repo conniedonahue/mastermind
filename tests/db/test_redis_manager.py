@@ -19,7 +19,6 @@ def test_redis_session_manager_create_and_get_session(mock_redis_session_manager
     session_manager, mock_redis = mock_redis_session_manager
     
     test_data = {"test": "data"}
-    
     mock_redis.setex = Mock()
     mock_redis.get = Mock(return_value=json.dumps(test_data))
     
