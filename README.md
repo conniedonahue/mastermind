@@ -61,14 +61,66 @@ To access the production server, complete steps 1-2 above, and then:
   - Check database logs: docker-compose logs db
   - Ensure environment variables are correctly set
 
-## Node instructions
+## Local Python instructions
 
-To run this server locally using Node, do the following:
+To run this server locally using Python, do the following:
 
-1. _Clone this repo:_ Grab the HTTPS URL from the main page of this repository and clicking the `<> Code` button. Open a Terminal and change the current working directory to where you'd like the cloned repository to be stored. Use following git command: `git clone https://github.com/conniedonahue/file-compare.git`.
-2. _Open the project in an IDE:_ Find the cloned repo and open it in an IDE like VS Code.
-3. _Run the server:_ Run `npm run start`.
-4. _Test out the app:_ Try out some of the `curl` requests listed above.
+1. _Install pyenv:_ If you don't already have it, pyenv helps you manage different python versions on your local machine. You'll need to know which shell you're currently using, if you don't, run: `echo $SHELL` in your terminal.
+   Here's how to download pyenv with Homebrew:
+
+```
+# Using Homebrew
+brew update
+brew install pyenv
+
+# Add to your shell (for zsh)
+echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
+echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zshrc
+echo 'eval "$(pyenv init -)"' >> ~/.zshrc
+
+source ~/.zshrc
+
+# Add to your shell (for bash)
+echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+
+source ~/.bashrc
+echo 'if [ -f ~/.bashrc ]; then source ~/.bashrc; fi' >> ~/.bash_profile
+
+```
+
+2. _Install Python 3.12.0 and pipenv:_
+
+```
+pyenv install 3.12.0
+pyenv global 3.12.0  # Set as default Python version
+pip install pipenv
+```
+
+3. _Set up your project_:
+
+```
+# Navigate to your project directory
+cd your-project-directory
+
+# Initialize pipenv with Python 3.12
+pipenv --python 3.12.0
+
+# Install dependencies from your Pipfile
+pipenv install
+
+# Install dev dependencies if needed
+pipenv install --dev
+
+# Initiate the virtual environment
+pipenv shell
+
+# Run the server
+make dev
+```
+
+Note the project's `makefile` to find other helpful commands.
 
 ## Design considerations
 
@@ -102,24 +154,50 @@ Here is an early sketch of the system design.
 - Low latency (<300 msec)
 
   - websockets for multiplayer???
+  - ultimately the front end is a little laggy
 
 - Scalable to 1M active sessions
 
-  - Example Default Session Size = 248 bytes
+  - (Note, this is my own suggestion)
+  - Early estimate of Default Session Size = 248 bytes
+    - 246 MB for cache of 1M active sessions
+  - Updated Estimate:
 
-    - Player 1 ID: 16 bytes
-    - Player 2 ID: 16 bytes
-    - Codeword: 4 digits × 4 bytes = 16 bytes
-    - Past Guesses: 10 guesses × 4 digits × 4 bytes = 160 bytes
+    - Session State:
 
-    Session Metadata:
+      - status (string, e.g., 'active_waiting'): ~16 bytes
+      - Per Player (×2):
+        - username (string, avg 12 chars): ~24 bytes
+        - remaining_guesses (integer): 4 bytes
+        - guesses array (up to 20 entries per player):
+          - Per guess:
+            - guess (string, 4 digits): 8 bytes
+            - correct_numbers (integer): 4 bytes
+            - correct_positions (integer): 4 bytes
+            - Total per guess: ~16 bytes
+          - Maximum guesses storage: 20 × 16 = 320 bytes per player
+      - Total per player: ~348 bytes
 
-    - Start/End Time: 16 bytes
-      Game Result: ~8 bytes (string/enum??)
-      Settings: ~16 bytes (custom settings as JSON)
-      Session ID: 16 bytes
+    - Session Config:
+      - player_info:
+        - username: ~24 bytes (48 bytes for 2)
+        - user_id: 16 bytes (32 bytes for 2)
+      - allowed_attempts (integer): 4 bytes
+      - code_length (integer): 4 bytes
+      - wordleify (boolean): 1 byte
+      - multiplayer (boolean): 1 byte
+      - code (array of 4 integers): ~16 bytes
 
-  - 1M active sessions = 248 MB for cache
+Total Approximate Size:
+
+- Session State: ~696 bytes (348 × 2 players)
+- Session Config: ~106 bytes
+- Session ID: 16 bytes
+- Overhead (Redis/serialization): ~50 bytes
+
+Grand Total: ~862 bytes per session at max attempts
+
+- For 1M active sessions: ~862 MB for cache
 
 ### Core Entities
 
@@ -128,10 +206,10 @@ Here is an early sketch of the system design.
 
 ### Data Flow
 
-- User logs in
+- User lands on home page
 - Adjust settings (extensions)
 - Start (game) session
-- Results -> Database
+- Results at Game End -> Database
 
 ### Express Backend
 
@@ -152,7 +230,7 @@ Out of scope for this project was handling users and authentication. For product
 - [x] Error handling implemented in `server.js` middleware
 - [x] Input validation for file uploads
 - [x] File type restrictions in `parseController.js`
-- [x] Implement rate limiting
+- [] Implement rate limiting
 - [ ] Add HTTPS support
 - [ ] Add security headers
 
