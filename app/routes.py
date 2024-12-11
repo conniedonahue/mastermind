@@ -1,12 +1,9 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash, current_app, make_response
+from flask import Blueprint, request, jsonify, render_template, url_for, current_app
 from .game_logic import generate_code, evaluate_guess, clean_and_validate_guess, check_win_lose_conditions
 from .db.session_manager import initialize_session
 from .db.user_db.service import UserService
-from sqlalchemy import select
 from app import create_app 
-import asyncio
 import logging
-import uuid
 
 game_routes = Blueprint('game_routes', __name__)
 logger = logging.getLogger(__name__) 
@@ -277,7 +274,7 @@ def extract_game_data(form):
             - wordleify[bool]: Whether to use Wordle-style feedback
             - multiplayer[bool]: Whether game is multiplayer
     """
-    
+
     return {
         'player_info': {
             'player1' : {

@@ -5,8 +5,8 @@ logger = logging.getLogger(__name__)
 
 def generate_code(code_length=4):
     """
-    Fetches a random code using Random.org API.
-    
+    Fetches a random code using Random.org API, with fallback to Python's random module.
+
     Args:
         code_length (int, optional): Length of the code to generate. Defaults to 4.
         
@@ -38,8 +38,10 @@ def generate_code(code_length=4):
         logger.info("Successfully generated code: %s", code)
         return code
     except requests.exceptions.RequestException as e:
-        logger.error("HTTP error occurred while fetching code: %s", e)
-        return None
+        logger.warning("HTTP error occurred while fetching code: %s. Using fallback random generator.", e)
+        code = [random.randint(0, 7) for _ in range(code_length)]
+        logger.info("Generated fallback code: %s", code)
+        return code
 
 
 def clean_and_validate_guess(raw_guess, code_length=4):
@@ -124,7 +126,7 @@ def check_win_lose_conditions(correct_numbers, correct_positions, session_data, 
             - 'player2_wins_player1_loses': Multiplayer player 2 victory
             - 'both_players_lose': Multiplayer both players lost
     """
-    
+
     logger.debug("Checking win/lose conditions for player: %s with this session_data: %s", player, session_data)
     multiplayer = session_data['config']['multiplayer']
     code = session_data['config']['code']
