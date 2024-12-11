@@ -10,93 +10,26 @@ To run this application in Docker, do the following:
 
 1. _Clone this repo:_  Open a Terminal and change the current working directory to where you'd like the cloned repository to be stored. Use following git command: `git clone https://github.com/conniedonahue/mastermind.git`.
 2. _Enter the directory in your terminal:_ `cd mastermind`
-3. _Build the Docker image:_ `docker build -t file-compare-api .` Note: the `-t` flag sets the tag for the image, feel free to replace `file-compare-api` with a different tag (although if you do, make sure to use your replaced name in the following steps).
-4. _Run the Container:_ After building the image, you can run your application with the following command: `docker run -d -p 3000:3000 --rm --name file-compare-api file-compare-api`. The `-d` flag runs the container in detached mode. The `-p flag` maps port `3000` on your local machine to port `3000` inside the Docker container. `--rm` removes the container upon exiting, and `--name` assigns the container its name.
+3. _Start the Dev Server:_ `docker-compose up` Note:
+4. _Access the Application:_ After running the `docker-compose` command, open up your browser to `http://localhost:5001`
 
-   If you want to use a different local port, modify the port mapping and environment variable like this:
-   `docker run -d -p {new local port}:3000 -e PORT=3000 --rm --name file-compare-api file-compare-api`.
-
-5. _Test out the App:_ try comparing 2 files using Postman or by sending `curl` requests.
+5. _Access the User Databse:_ 
+  - through Docker's psql: `docker-compose exec db psql -U user -d dev_db`
+  - or through your local psql: `psql -h localhost -p 5432 -U user -d dev_db`
 
    Some helpful Docker commands while using the app:
 
-   To view recent logs: `docker logs file-compare-api`
-   To continously follow the logs: `docker logs -f file-compare-api`
+   To close the docker server: `docker-compose down`
+   To view logs: `docker-compose logs`
+   To continously follow the logs: `docker-compose logs -f`
+   To see all Docker container-ids: `docker ps`
+   To create database backup: `docker-compose exec db pg_dump -U user dev_db > backup.sql`
+   To restore database: `docker-compose exec -T db psql -U user dev_db < backup.sql`
 
-   Also, if you want to have your terminal pretty print the JSON objects returned from curl commands, I recommend [jq](https://github.com/jqlang/jq/wiki/Installation).
+## Production Environment
+In a real life deployment, I would ask you to 
 
-   NOTE: If you have the repo open in an IDE, the Python files in the `__test-files__` folder may flag some warnings to select an interpreter. If you are in VSCode, you can copy `.vscode/settings.json.example` into your `.vscode/settings.json`.
 
-   Let's try out a few comparisons! I've set up some test files in the `__test-files__` folder. Here is an comparison of two PDF versions of "Wild Geese" by Mary Oliver:
-
-   ```
-   curl -X POST \
-     -F "file1=@__test-files__/pdf/Wild-Geese1.pdf" \
-     -F "file2=@__test-files__/pdf/Wild-Geese2.pdf" \
-     http://localhost:3000/compare/
-   ```
-
-   (if using `jq`, add `| jq` after `http://localhost:3000/compare/`)
-
-   This should return a JSON object like this:
-
-   ```
-   {
-     "message": "Differences detected",
-     "result": {
-       "isEqual": false,
-       "differences": [
-         {
-           "line": 6,
-           "file1": " You only have to let the soft animal of your body",
-           "file2": " YOU ONLY HAVE TO LET THE SOFT ANIMAL OF YOUR BODY"
-         },
-         {
-           "line": 7,
-           "file1": " love what it loves.",
-           "file2": " LOVE WHAT IT LOVES."
-         },
-         {
-           "line": 19,
-           "file1": " over and over announcing your place",
-           "file2": " over and over ANNOUNCING YOUR PLACE"
-         },
-         {
-           "line": 20,
-           "file1": " in the family of things.",
-           "file2": " IN THE FAMILY OF THINGS."
-         }
-       ]
-     }
-   }
-   ```
-
-   You can test the other files in this project's `__test-files__` by running:
-
-   ```
-   curl -X POST \
-     -F "file1=@__test-files__/text/car_1.py" \
-     -F "file2=@__test-files__/text/car_2.py" \
-     http://localhost:3000/compare/
-   ```
-
-   ```
-   curl -X POST \
-     -F "file1=@__test-files__/text/model1.ts" \
-     -F "file2=@__test-files__/text/model2.ts" \
-     http://localhost:3000/compare/
-   ```
-
-   ```
-   curl -X POST \
-     -F "file1=@__test-files__/text/WDC.md" \
-     -F "file2=@__test-files__/text/WDC-copy.md" \
-     http://localhost:3000/compare/
-   ```
-
-6. _Find the Docker container-id_: To see a list of your Docker Containers, enter: `docker ps`.
-7. _Close down the docker container_: When you would like to shut down the container, enter the following command into your terminal: `docker stop <container-id>`. You can also close it with the name: `docker stop file-compare-api`.
-8. _Remove the Docker Image_: To remove the Docker image, run: `docker rmi file-compare-api`
 
 ## Node instructions
 
