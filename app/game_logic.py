@@ -15,8 +15,8 @@ def generate_code(code_length=4):
         
     Raises:
         requests.exceptions.RequestException: If HTTP request to Random.org fails
-    
     """
+
     logger.debug("Generating a code of length %d.", code_length)
     url = "https://www.random.org/integers"
     params = {
@@ -41,6 +41,7 @@ def generate_code(code_length=4):
         logger.error("HTTP error occurred while fetching code: %s", e)
         return None
 
+
 def clean_and_validate_guess(raw_guess, code_length=4):
     """
     Cleans and validates the guess input.
@@ -55,6 +56,7 @@ def clean_and_validate_guess(raw_guess, code_length=4):
     Raises:
         ValueError: If input is not exactly code_length digits or contains numbers outside 0-7
     """
+
     # Remove spaces and validate the input
     cleaned_guess = "".join(raw_guess.split())
     logger.debug("Cleaning and validating raw guess: %s", raw_guess)
@@ -87,6 +89,7 @@ def evaluate_guess(code, guess):
             correct_numbers: Total number of correct digits regardless of position
             correct_positions: Number of digits in correct position
     """
+
     logger.debug("Evaluating guess: %s against code: %s", guess, code)
     correct_numbers, correct_positions = 0, 0
     
@@ -121,6 +124,7 @@ def check_win_lose_conditions(correct_numbers, correct_positions, session_data, 
             - 'player2_wins_player1_loses': Multiplayer player 2 victory
             - 'both_players_lose': Multiplayer both players lost
     """
+    
     logger.debug("Checking win/lose conditions for player: %s with this session_data: %s", player, session_data)
     multiplayer = session_data['config']['multiplayer']
     code = session_data['config']['code']

@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 def init_components(app):
     """Initialize async database components"""
+
     db_url = app.config['SQLALCHEMY_DATABASE_URI']
     if not db_url:
         raise ValueError("No database URL configured! Check your environment variables.")
@@ -75,6 +76,7 @@ def create_redis_client(config):
     Raises:
         RuntimeError: If unable to establish a connection to Redis
     """
+    
     # Temp boost is log level for this operation
     original_level = logging.getLogger().level
 

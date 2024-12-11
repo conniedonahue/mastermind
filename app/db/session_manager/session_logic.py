@@ -2,16 +2,26 @@ from .interface import SessionManagerInterface as SessionManager
 
 def initialize_session(session_manager: SessionManager, session_config: dict) -> str:
     """
-    Initialize a new session and return its session ID.
+    Initialize a new session.
 
     Args:
-        session_manager (SessionManager): The session manager instance to use.
-        session_data (dict): Data to store in the session.
-
+        session_manager (SessionManager): The session manager instance
+        session_config (dict): Session configuration containing:
+            - allowed_attempts: Number of allowed guesses
+            - code_length: Length of secret code
+            - wordleify: Whether to use Wordle-style feedback
+            - multiplayer: Whether game is multiplayer
+            - code: The secret code to guess
+        
     Returns:
-        str: The generated session ID.
+        Tuple[str, dict]: A tuple containing:
+            - session_id: Unique session identifier
+            - session_state: Initial game state
+        
+    Raises:
+        ValueError: If required configuration keys are missing
     """
-
+    
     required_keys = ['allowed_attempts', 'code_length', 'wordleify', 'multiplayer', 'code']
     missing_keys = [key for key in required_keys if session_config.get(key) is None]
 
