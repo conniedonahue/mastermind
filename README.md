@@ -233,9 +233,9 @@ The database is updated at two points (synchronously): upon entering a game and 
 - [x] Comprehensive error handling
 - [x] Detailed error responses in OpenAPI spec
 - [x] Containerized with Docker
+- [x] Add Random API failover strategy
 - [ ] Graceful error pages for front end
 - [ ] Add database failover strategy
-- [ ] Add Random API failover strategy
 - [ ] Implement `/health` check endpoint
 
 ### 🧪 Testing
@@ -292,6 +292,6 @@ The database is updated at two points (synchronously): upon entering a game and 
 
 1. Add testing of User DB
 2. Add more unit tests of the extensions
-3. Random API failover
+3. Session Failover
 4. Rate Limiting
 5. Message Queue

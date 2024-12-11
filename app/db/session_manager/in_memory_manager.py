@@ -7,6 +7,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 class InMemorySessionManager(SessionManagerInterface):
+    """
+    In-memory implementation of session management.
+    
+    Attributes:
+        _store (Dict[str, Dict]): Internal storage for sessions
+        SESSION_TIMEOUT (timedelta): Time after which sessions expire
+    """
 
     _store: Dict[str, Dict] = {}
     SESSION_TIMEOUT = timedelta(hours=1)  # TTL = 1 hour
@@ -22,6 +29,7 @@ class InMemorySessionManager(SessionManagerInterface):
         Returns:
             str: Generated session ID
         """
+
         session_id = str(uuid.uuid4())
         session_data = {
             'id': session_id,
@@ -44,8 +52,9 @@ class InMemorySessionManager(SessionManagerInterface):
             session_id (str): Session identifier
         
         Returns:
-            Optional[dict]: Session data or None if expired/not found
+            Optional[dict]: Session data if found/not expried, otherwise None
         """
+
         session = cls._store.get(session_id)
         logger.info("retrieving session: %s", session)
         
@@ -76,6 +85,7 @@ class InMemorySessionManager(SessionManagerInterface):
         Returns:
             bool: Whether update was successful
         """
+
         session = cls._store.get(session_id)
         if not session:
             logger.warning("Session not found for update: %s", session_id)
@@ -92,8 +102,12 @@ class InMemorySessionManager(SessionManagerInterface):
         Remove a session
         
         Args:
-            session_id (str): Session identifier to remove
+            session_id (str): Session identifier
+
+        Returns:
+            str: Confirmation message
         """
+
         session_id = cls._store.pop(session_id, None)
         if session_id:
             logger.info("Deleted session: %s", session_id)
@@ -109,6 +123,7 @@ class InMemorySessionManager(SessionManagerInterface):
         Returns:
             int: Number of sessions cleaned up
         """
+
         now = datetime.now()
         expired_sessions = [
             session_id for session_id, session in cls._store.items()
@@ -127,8 +142,9 @@ class InMemorySessionManager(SessionManagerInterface):
         Get the number of active sessions
         
         Returns:
-            int: Number of active sessions
+            int: Number of non-expired sessions
         """
+        
         now = datetime.now()
 
         active_sessions = 0

@@ -7,11 +7,27 @@ import logging
 logger = logging.getLogger(__name__)
 
 class UserService:
+    """
+    Service for managing User Database operations and persistence.
+    
+    Args:
+        db_manager (DatabaseManager): Database manager instance for database operations
+    """
+
     def __init__(self, db_manager):
         self.db_manager = db_manager
 
     def test_db_connection(self):
-        """Test if the database connection is working."""
+        """
+        Tests if the database connection is working.
+        
+        Returns:
+            bool: True if connection successful, False otherwise
+            
+        Raises:
+            OperationalError: If database connection fails
+        """
+
         try:
             with self.db_manager.get_session() as session:
                 # Attempt a simple query to check the connection
@@ -28,21 +44,32 @@ class UserService:
         Retrieve a user by username.
         
         Args:
-            username (str)
-        
+            username (str): Username to search for
+            
         Returns:
-            User (User)
-        
+            User: User object if found, None otherwise
+            
         Raises:
-            RuntimeError: If unable to establish a connection to Redis
+            OperationalError: If database operation fails
         """
+
         with self.db_manager.get_session() as session:
             stmt = select(User).where(User.username == username)
             result = session.execute(stmt)
             return result.scalar_one_or_none()
 
     def update_user_game_stats(self, username: str, won: bool) -> None:
-        """Update a user's game statistics synchronously"""
+        """
+        Updates a user's game statistics synchronously.
+        
+        Args:
+            username (str): Username of the player
+            won (bool): Whether the game was won
+            
+        Raises:
+            Exception: If update fails, with session rollback
+        """
+
         with self.db_manager.get_session() as session:
             logger.info("Attempting to update stats for user %s", username)
             try:
@@ -60,18 +87,18 @@ class UserService:
 
     def create_or_get_user(self, username: str) -> int:
         """
-        Retrieve or create a user by username.
-        (This is here mostly to make the workflow easier before auth)
+        Retrieves existing user or creates new user if not found.
         
         Args:
-            username (str)
-        
+            username (str): Username to look up or create
+            
         Returns:
-            User.id (int)
-        
+            int: User ID
+            
         Raises:
-            RuntimeError: 
+            Exception: If database operation fails, with session rollback
         """
+        
         logger.info('Fetching or creating user')
         with self.db_manager.get_session() as session:
             try:
