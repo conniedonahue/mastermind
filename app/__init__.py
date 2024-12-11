@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 def init_components(app):
     """Initialize async database components"""
     db_url = app.config['SQLALCHEMY_DATABASE_URI']
+    if not db_url:
+        raise ValueError("No database URL configured! Check your environment variables.")
     
     # Initialize DB manager and Queue synchronously
     db_manager = DatabaseManager(db_url)
