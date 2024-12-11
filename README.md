@@ -2,7 +2,7 @@
 
 ## Docker instructions
 
-Prerequisites:
+### Prerequisites:
 
 - Docker and Docker Compose installed on your machine
 - Git installed on your machine
@@ -159,45 +159,11 @@ Here is an early sketch of the system design.
 - Scalable to 1M active sessions
 
   - (Note, this is my own suggestion)
-  - Early estimate of Default Session Size = 248 bytes
+  - Early estimate of _Default Session_ Size = 248 bytes
     - 246 MB for cache of 1M active sessions
   - Updated Estimate:
-
-    - Session State:
-
-      - status (string, e.g., 'active_waiting'): ~16 bytes
-      - Per Player (×2):
-        - username (string, avg 12 chars): ~24 bytes
-        - remaining_guesses (integer): 4 bytes
-        - guesses array (up to 20 entries per player):
-          - Per guess:
-            - guess (string, 4 digits): 8 bytes
-            - correct_numbers (integer): 4 bytes
-            - correct_positions (integer): 4 bytes
-            - Total per guess: ~16 bytes
-          - Maximum guesses storage: 20 × 16 = 320 bytes per player
-      - Total per player: ~348 bytes
-
-    - Session Config:
-      - player_info:
-        - username: ~24 bytes (48 bytes for 2)
-        - user_id: 16 bytes (32 bytes for 2)
-      - allowed_attempts (integer): 4 bytes
-      - code_length (integer): 4 bytes
-      - wordleify (boolean): 1 byte
-      - multiplayer (boolean): 1 byte
-      - code (array of 4 integers): ~16 bytes
-
-Total Approximate Size:
-
-- Session State: ~696 bytes (348 × 2 players)
-- Session Config: ~106 bytes
-- Session ID: 16 bytes
-- Overhead (Redis/serialization): ~50 bytes
-
-Grand Total: ~862 bytes per session at max attempts
-
-- For 1M active sessions: ~862 MB for cache
+    - 514 MB for 1M active sessions
+    - This would go up with extensions (added attempts)
 
 ### Core Entities
 
@@ -209,98 +175,123 @@ Grand Total: ~862 bytes per session at max attempts
 - User lands on home page
 - Adjust settings (extensions)
 - Start (game) session
+- (Optional: Player2 joins)
 - Results at Game End -> Database
 
-### Express Backend
+### Python
 
-The backend is built in Node/Express using a controller pattern. Express has very handy mechanisms for error handling/JSON parsing, and it also has a rich ecosystem of libraries and middleware (like `express-rate-limit`).
+I decided to write the backend of this project in Python, following the suggestion from the prompt to use a backend-focused language (my primary tech stack is JavaScript/Node, although I have worked with python in the past). Development was lightning quick Python's easy database integration (SQLAlchemy's ORM, Redis Library), and out-of-the-box testing.
 
-### LRU Cache
+### Flask Web Framework
 
-In order to cut down on the compute time of parsing files, I thought it would be helpful to cache parsed files in an LRU cache. This would be helpful comparing the same file to multiple other files. Based on the calculations in the Nonfunctional Requirements section, 10% of expected traffic would come to 360GB... which would require a fleet of servers. It might be more realistic to bring this number down to 36GB (1% of total) and adjust strategy based on cache misses. For production, parsed content should be encrypted to prevent unauthorized access.
+The backend is built using Flask. It's lightweight, unopinionated framework made it easy to set up routes and handle HTTP requests, and it has template system for HTML rendering.
+
+### Session Manager
+
+The first major design decision I had to make was how to handle game state. At first, I was considering making a stateless, RESTful API that stored game state in the front end using JWT tokens since I had estimated the game state to be less that 500 bytes. However, I really wanted to create a multiplayer game, and I was worried about state synchronization with the need for clients to send their JWTs back to the server.
+
+So I opted for a session-based architecture. Session data is stored locally in a cache (in memory in dev and in a Redis cloud instance in prod) and updated with each guess. This meets my nonfunctional requirement of low-latency, allowing for fast retrievals and updates of game state while still providing consistency for multiplayer games
 
 ### User Database
 
-Out of scope for this project was handling users and authentication. For production, I would build out a user database that included the history of response objects from past searches. These response objects could be used for faster retrievals of previously-entered comparisons.
+I added a User Database to keep track of User's gamme history. It currently has one model, User, that looks like this:
+
+- User:
+  - id (primary key)
+  - username (str)
+  - games_won (int)
+  - games_lost (int)
+  - total_games_played (int)
+  - created_at (DateTime)
+
+The database is updated at two points (synchronously): upon entering a game and when the session status changes from `"active"`.
 
 ## Production Readiness Checklist
 
 ### 🔒 Security
 
-- [x] Error handling implemented in `server.js` middleware
-- [x] Input validation for file uploads
-- [x] File type restrictions in `parseController.js`
-- [] Implement rate limiting
+- [x] Environment-based configuration
+- [x] Input validation for guesses
+- [x] Database connection security
+- [ ] Implement rate limiting
 - [ ] Add HTTPS support
 - [ ] Add security headers
+- [ ] Add CSRF protection
+- [ ] Sanitize user inputs in templates
 
 ### 🚀 Performance
 
-- [x] LRU Caching for file parsing (`parsedFileCache.js`)
-  - Configured for 200K entries (100 comparisons) or 2.5MB max
-  - 24-hour cache retention
-- [x] Efficient file parsing with minimal memory overhead
-- [ ] Add request logging / timing metrics
+- [x] Redis Session Caching
+  - Configured for 1M continuous sessions or 514MB
+  - 1-hour cache retention
+- [ ] Configure User_DB for async operations
+- [ ] Add Message Queue to handle User_DB Operations
+- [ ] Configure Gunicorn workers
 
 ### 📊 Reliability
 
 - [x] Comprehensive error handling
 - [x] Detailed error responses in OpenAPI spec
 - [x] Containerized with Docker
-- [x] Graceful error routing in `server.js`
+- [ ] Graceful error pages for front end
+- [ ] Add database failover strategy
+- [ ] Add Random API failover strategy
 - [ ] Implement `/health` check endpoint
 
 ### 🧪 Testing
 
-- [x] Unit tests for controllers
-- [x] Integration tests for API endpoints
-- [x] Error scenario testing
-- [ ] Add performance/load testing
-- [ ] Implement end-to-end testing
+- [x] Unit tests for routing and logic
+- [x] Session Manager Tests
+- [ ] Extensions Tests
+- [ ] User Database Tests
+- [ ] Error scenario testing
+- [ ] Performance/load testing
+- [ ] End-to-end testing
 - [ ] Contract testing
 
 ### 📝 Documentation
 
 - [x] OpenAPI specification
-- [x] Detailed README
+- [x] Docker Setup Instructions
 - [ ] Add performance and scaling recommendations
 
 ### 🔍 Observability
 
-- [ ] Implement logging
+- [x] Basic logging
 - [ ] Add request tracing
 - [ ] Configure application monitoring
 
 ### ⚙️ Configuration
 
 - [x] Environment-based port configuration
+- [ ] Logging configuration
+
+### 🌟 Extensions
+
+- [x] Increase Allowed Attempts
+- [x] Increase # of digits in codeword
+- [x] Dev / Prod environment
+- [x] Deployed to Heroku
+- [x] Session Manager Cache
+- [x] User Database
+- [x] Logging
 
 ### 🌟 Potential Features Roadmap
 
 - [ ] User Authentication System
   - User registration
   - Secure login / OAuth etc.
-- [ ] Results Persistence
-  - Database to store comparison results
-  - Allow users to view comparisons history
-  - Export results (PDF/CSV)
-- [ ] Advanced Comparison Options
-  - Configurable comparison modes (strict/lenient)
-  - Support for more file types
-  - Support for non-English language
-  - Detailed diff visualization
-- [ ] Collaborative Features
-  - Share comparison results
-  - Add comments to differences
-- [ ] Performance Enhancements
-  - Async file processing
-  - Batch file comparison
-- [ ] Put LRU Cache in Distributed System
+- [ ] Wordleify
+  - Color feedback for users
+  - (I left this in as a possible extension to tackle during intv)
+- [ ] Asynch Database Configuration
+- [ ] Leaderboard
+  - User_DB could keep track of top 10 payers with most game_wins
 
 ### Next Steps for Production Readiness
 
-1. Add logging
-2. Set up application monitoring
-3. Configure HTTPS
-4. Set up persistent database for Users / Results
-5. Tackle non-English characters
+1. Add testing of User DB
+2. Add more unit tests of the extensions
+3. Random API failover
+4. Rate Limiting
+5. Message Queue
