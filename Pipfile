@@ -9,11 +9,15 @@ requests = "*"
 python-dotenv = "*"
 redis = "*"
 gunicorn = "*"
+psycopg2-binary = "*"
+uvicorn = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 pytest = "*"
 pytest-mock = "*"
 pytest-dotenv = "*"
+alembic = "*"
 
 [requires]
 python_version = "3.12"

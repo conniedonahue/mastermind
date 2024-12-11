@@ -1,7 +1,10 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash, current_app, make_response
 from .game_logic import generate_code, evaluate_guess, clean_and_validate_guess, check_win_lose_conditions
 from .db.session_manager import initialize_session
+from .db.user_db.service import UserService
+from sqlalchemy import select
 from app import create_app 
+import asyncio
 import logging
 import uuid
 
@@ -19,21 +22,14 @@ def create_game():
     logger.debug("Creating game with form data: %s", request.form.to_dict())
     try: 
         session_manager = current_app.session_manager
-        # Extract data from the request
-        allowed_attempts = int(request.form.get('allowed_attempts', 10))
-        code_length = int(request.form.get('code_length', 4))
-        wordleify = 'wordleify' in request.form
-        multiplayer = 'multiplayer' in request.form
+        config = extract_game_data(request.form)
 
-        # code = generate_code(code_length)
-
-        config = {
-            'allowed_attempts': allowed_attempts,
-            'code_length': code_length,
-            'wordleify': wordleify,
-            'multiplayer': multiplayer,
-            'code': [0, 0 , 0 ,0]
-        }
+        user_service = current_app.user_service
+        user_id = user_service.create_or_get_user(
+            username=config['player_info']['player1']['username']
+        )
+        config['player_info']['player1']['user_id'] = user_id
+        config['code'] = [0,0,0,0]
 
         logger.debug("Game config:  %s", config)
 
@@ -42,8 +38,7 @@ def create_game():
         session_id, session_state = initialize_session(session_manager, config)
         logger.info("Session created successfully with session ID: %s", session_id)
 
-
-        join_link = f"/game/join/{session_id}" if multiplayer else None
+        join_link = f"/game/join/{session_id}" if config['multiplayer'] else None
 
         return jsonify({
             'message': 'Game created successfully!',
@@ -75,22 +70,6 @@ def render_game_page(session_id):
                             is_multiplayer=is_multiplayer,
                             join_link=f"/game/join/{session_id}" if is_multiplayer else None)
 
-# @game_routes.route('/multiplayer-game/<session_id>', methods=['GET'])
-# def render_multiplayer_game_page(session_id):
-#     session_manager = current_app.session_manager
-#     session_data = session_manager.get_session(session_id)
-#     if not session_data:
-#         return jsonify({"error": "Session not found"}), 404
-
-#     is_multiplayer = session_data['config'].get('multiplayer', False)
-#     template = 'multiplayer_game.html' if is_multiplayer else 'game.html'
-
-
-#     return render_template(template, 
-#                             session_id="session", 
-#                             game_state=session_data['state'], 
-#                             is_multiplayer=is_multiplayer   ,
-#                             join_link=f"/game/join/{session_id}" if is_multiplayer else None)
 
 @game_routes.route('/game/join/<session_id>', methods=['GET'])
 def render_join_page(session_id):
@@ -115,18 +94,22 @@ def join_multiplayer_game(session_id):
         return jsonify({"error": "Game not found or not multiplayer"}), 404
 
     # Add player 2 to the session
+    user_service = current_app.user_service
+
     if "player2" not in session_data['state']:
-        player2_name = request.form.get('player2_name', 'Player 2')
-        logger.info("Adding %s to the game", player2_name)
+        player2_username = request.form.get('player2_name', 'Player 2')
+        logger.info("Adding %s to the session", player2_username)
         session_data['state']['player2'] = {
-            'name': player2_name,
+            'username': player2_username,
             'remaining_guesses': session_data['config']['allowed_attempts'],
             'guesses': []
         }
+        player2_user_id = user_service.create_or_get_user(player2_username)
+        session_data['config']['player_info']['player2'] = {'username' : player2_username,'user_id' : player2_user_id  }
         session_data['state']['status'] = 'active'
         session_manager.update_session(session_id, session_data)
-        logger.info("%s joined game %s successfully", player2_name, session_id )
-        return jsonify({"message": f"{player2_name} joined game successfully"}), 200
+        logger.info("%s joined game %s successfully", player2_username, session_id)
+        return jsonify({"message": f"{player2_username} joined game successfully"}), 200
     else:
         logger.warning("Game is full for session %s", session_id)
         return jsonify({"error": "Game is full"}), 400
@@ -148,6 +131,7 @@ def get_game_state(session_id):
 def guess(session_id):
     logger.info("Player %s making a guess for session %s", request.form.get('player', 'player1'), session_id)
     session_manager = current_app.session_manager
+    user_service = current_app.user_service
     raw_guess = request.form['guess']
     logger.debug("Raw guess: %s", raw_guess)
 
@@ -181,7 +165,7 @@ def guess(session_id):
                 'correct_numbers': correct_numbers,
                 'correct_positions': correct_positions
             })
-        session_data['state']['status'] = check_win_lose_conditions(correct_numbers, correct_positions, session_data, player)
+        session_data['state']['status'] = check_win_lose_conditions(correct_numbers, correct_positions, session_data, player, user_service)
 
         session_manager.update_session(session_id, session_data)
         logger.info("Updated game state for session %s", session_id)
@@ -192,3 +176,23 @@ def guess(session_id):
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
 
+def extract_game_data(form):
+    """
+    Helper function to extract game-related data from Reqeuest.
+
+    Args:
+        form (ImmutableMultiDict): Game config data from request.
+
+    Returns:
+        dict: game-related data.
+    """
+    return {
+        'player_info': {
+            'player1' : {
+               'username': form.get('username')}
+            },
+        'allowed_attempts': int(form.get('allowed_attempts', 10)),
+        'code_length': int(form.get('code_length', 4)),
+        'wordleify': 'wordleify' in form,
+        'multiplayer': 'multiplayer' in form,
+    }
