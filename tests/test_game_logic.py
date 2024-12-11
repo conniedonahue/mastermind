@@ -20,16 +20,21 @@ def test_evaluate_guess():
     assert correct_numbers == 3
     assert correct_positions == 2
 
-def test_check_win_lose_conditions_singleplayer_wins(singleplayer_session_data):
+def test_check_win_lose_conditions_singleplayer_wins(singleplayer_session_data, mocker):
+    mock_user_service = mocker.Mock()
     singleplayer_session_data['config']['code'] = [1, 2, 3, 4]
-    status = check_win_lose_conditions(4, 4, singleplayer_session_data, 'player1')
+    status = check_win_lose_conditions(4, 4, singleplayer_session_data, 'player1', mock_user_service)
     assert status == 'won'
+    mock_user_service.update_user_game_stats.assert_called_with(singleplayer_session_data['config']['player_info']['player1']['username'], True)
 
-def test_check_win_lose_conditions_singleplayer_loses(singleplayer_session_data):
+def test_check_win_lose_conditions_singleplayer_loses(singleplayer_session_data, mock_user_service, mocker):
+    mock_user_service = mocker.Mock()
     singleplayer_session_data['state']['player1']['remaining_guesses'] = 0
-    status = check_win_lose_conditions(4, 3, singleplayer_session_data, 'player1')
+    status = check_win_lose_conditions(4, 3, singleplayer_session_data, 'player1', mock_user_service)
     assert status == 'lost'
 
-def test_check_win_lose_conditions_multiplayer_player2_wins(multiplayer_session_data):
-    status = check_win_lose_conditions(4, 4, multiplayer_session_data, 'player2')
+def test_check_win_lose_conditions_multiplayer_player2_wins(multiplayer_session_data, mock_user_service):
+    status = check_win_lose_conditions(4, 4, multiplayer_session_data, 'player2', mock_user_service)
     assert status == 'player2_wins_player1_loses'
+    mock_user_service.update_user_game_stats.assert_any_call(multiplayer_session_data['config']['player_info']['player1']['username'], False)
+    mock_user_service.update_user_game_stats.assert_any_call(multiplayer_session_data['config']['player_info']['player2']['username'], True)
