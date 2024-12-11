@@ -5,9 +5,16 @@ logger = logging.getLogger(__name__)
 
 def generate_code(code_length=4):
     """
-    Fetches a random 4-digit code ( between `min` and `max`) using Random.org API.
-    Random.org API returns a string column of numbers (e.g. '3/n4/n2/n1')
-    Returns that response as list of ints (e.g. [3, 4, 2, 1]) 
+    Fetches a random code using Random.org API.
+    
+    Args:
+        code_length (int, optional): Length of the code to generate. Defaults to 4.
+        
+    Returns:
+        List[int]: List of random digits between 0-7, or None if request fails
+        
+    Raises:
+        requests.exceptions.RequestException: If HTTP request to Random.org fails
     
     """
     logger.debug("Generating a code of length %d.", code_length)
@@ -23,6 +30,7 @@ def generate_code(code_length=4):
     }
 
     try:
+        # API returns a string column of numbers (e.g. '3/n4/n2/n1')
         logger.debug("Sending request to Random.org with params: %s", params)
         response = requests.get(url, params=params)
         response.raise_for_status()
@@ -34,7 +42,19 @@ def generate_code(code_length=4):
         return None
 
 def clean_and_validate_guess(raw_guess, code_length=4):
-    """Cleans and validates the guess input."""
+    """
+    Cleans and validates the guess input.
+
+    Args:
+        raw_guess (str): The raw guess input from user
+        code_length (int, optional): Expected length of the guess. Defaults to 4.
+        
+    Returns:
+        List[int]: Cleaned and validated list of digits
+        
+    Raises:
+        ValueError: If input is not exactly code_length digits or contains numbers outside 0-7
+    """
     # Remove spaces and validate the input
     cleaned_guess = "".join(raw_guess.split())
     logger.debug("Cleaning and validating raw guess: %s", raw_guess)
@@ -55,7 +75,17 @@ def clean_and_validate_guess(raw_guess, code_length=4):
 
 
 def evaluate_guess(code, guess):
-    """Evaluates the player's guess and returns feedback.
+    """
+    Evaluates the player's guess against the secret code.
+    
+    Args:
+        code (List[int]): The secret code
+        guess (List[int]): The player's guess
+        
+    Returns:
+        Tuple[int, int]: A tuple containing (correct_numbers, correct_positions)
+            correct_numbers: Total number of correct digits regardless of position
+            correct_positions: Number of digits in correct position
     """
     logger.debug("Evaluating guess: %s against code: %s", guess, code)
     correct_numbers, correct_positions = 0, 0
@@ -70,7 +100,27 @@ def evaluate_guess(code, guess):
     logger.info("Evaluation result: correct_numbers = %d, correct_positions = %d", correct_numbers, correct_positions)
     return correct_numbers, correct_positions
 
+
 def check_win_lose_conditions(correct_numbers, correct_positions, session_data, player, user_service):
+    """
+    Checks if the game has been won or lost based on the latest guess.
+    
+    Args:
+        correct_numbers (int): Number of correct digits in the guess
+        correct_positions (int): Number of digits in correct position
+        session_data (dict): Current game session data
+        player (str): Current player ('player1' or 'player2')
+        user_service (UserService): Service for updating user statistics
+        
+    Returns:
+        str: Game status - one of:
+            - 'active': Game continues
+            - 'won': Single player victory
+            - 'lost': Single player loss
+            - 'player1_wins_player2_loses': Multiplayer player 1 victory
+            - 'player2_wins_player1_loses': Multiplayer player 2 victory
+            - 'both_players_lose': Multiplayer both players lost
+    """
     logger.debug("Checking win/lose conditions for player: %s with this session_data: %s", player, session_data)
     multiplayer = session_data['config']['multiplayer']
     code = session_data['config']['code']
@@ -92,9 +142,7 @@ def check_win_lose_conditions(correct_numbers, correct_positions, session_data, 
             status = f"{player}_wins_{other_player}_loses"
             logger.info("Player %s wins, status set to %s", player, status)
             user_service.update_user_game_stats(session_data['config']['player_info'][player]['username'], True)
-            user_service.update_user_game_stats(session_data['config']['player_info'][other_player]['username'], False)
-
-            
+            user_service.update_user_game_stats(session_data['config']['player_info'][other_player]['username'], False)  
         
         if player1_remaining_guesses <= 0 and player2_remaining_guesses <= 0:
             status = 'both_players_lose'
@@ -102,8 +150,7 @@ def check_win_lose_conditions(correct_numbers, correct_positions, session_data, 
             user_service.update_user_game_stats(player1_username, False)
             user_service.update_user_game_stats(player2_username, False)
 
-
-
+    # single player:        
     else:
         username = session_data['config']['player_info']['player1']['username']
         if correct_positions == len(session_data['config']['code']):
