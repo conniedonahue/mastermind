@@ -21,6 +21,7 @@ class DatabaseManager:
         self.SessionLocal = sessionmaker(bind=self.engine)
 
 
+
     def init_db(self):
         """Initialize database tables"""
         # Use synchronous connection to create tables

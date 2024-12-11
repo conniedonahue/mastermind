@@ -10,9 +10,8 @@ python-dotenv = "*"
 redis = "*"
 gunicorn = "*"
 psycopg2-binary = "*"
-asyncpg = "*"
 uvicorn = "*"
-sqlalchemy = {extras = ["asyncio"], version = "*"}
+sqlalchemy = "*"
 
 [dev-packages]
 pytest = "*"
