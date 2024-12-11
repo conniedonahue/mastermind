@@ -94,18 +94,22 @@ def join_multiplayer_game(session_id):
         return jsonify({"error": "Game not found or not multiplayer"}), 404
 
     # Add player 2 to the session
+    user_service = current_app.user_service
+
     if "player2" not in session_data['state']:
-        player2_name = request.form.get('player2_name', 'Player 2')
-        logger.info("Adding %s to the game", player2_name)
+        player2_username = request.form.get('player2_name', 'Player 2')
+        logger.info("Adding %s to the session", player2_username)
         session_data['state']['player2'] = {
-            'name': player2_name,
+            'username': player2_username,
             'remaining_guesses': session_data['config']['allowed_attempts'],
             'guesses': []
         }
+        player2_user_id = user_service.create_or_get_user(player2_username)
+        session_data['config']['player_info']['player2'] = {'username' : player2_username,'user_id' : player2_user_id  }
         session_data['state']['status'] = 'active'
         session_manager.update_session(session_id, session_data)
-        logger.info("%s joined game %s successfully", player2_name, session_id )
-        return jsonify({"message": f"{player2_name} joined game successfully"}), 200
+        logger.info("%s joined game %s successfully", player2_username, session_id)
+        return jsonify({"message": f"{player2_username} joined game successfully"}), 200
     else:
         logger.warning("Game is full for session %s", session_id)
         return jsonify({"error": "Game is full"}), 400

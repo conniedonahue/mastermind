@@ -71,7 +71,7 @@ def evaluate_guess(code, guess):
     return correct_numbers, correct_positions
 
 def check_win_lose_conditions(correct_numbers, correct_positions, session_data, player, user_service):
-    logger.debug("Checking win/lose conditions for player: %s", player)
+    logger.debug("Checking win/lose conditions for player: %s with this session_data: %s", player, session_data)
     multiplayer = session_data['config']['multiplayer']
     code = session_data['config']['code']
     player1_remaining_guesses = session_data['state']['player1']['remaining_guesses']
