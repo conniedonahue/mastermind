@@ -81,6 +81,8 @@ def check_win_lose_conditions(correct_numbers, correct_positions, session_data, 
 
     if multiplayer:
         player2_remaining_guesses = session_data['state']['player2']['remaining_guesses']
+        player1_username = session_data['config']['player_info']['player1']['username']
+        player2_username = session_data['config']['player_info']['player2']['username']
 
         won = (correct_positions == len(code))
         logger.debug("Multiplayer mode: player %s won: %s", player, won)
@@ -89,11 +91,16 @@ def check_win_lose_conditions(correct_numbers, correct_positions, session_data, 
             other_player = 'player2' if player == 'player1' else 'player1'
             status = f"{player}_wins_{other_player}_loses"
             logger.info("Player %s wins, status set to %s", player, status)
+            user_service.update_user_game_stats(session_data['config']['player_info'][player]['username'], True)
+            user_service.update_user_game_stats(session_data['config']['player_info'][other_player]['username'], True)
+
             
         
         if player1_remaining_guesses <= 0 and player2_remaining_guesses <= 0:
             status = 'both_players_lose'
             logger.info("Both players ran out of guesses, setting status to %s", status)
+            user_service.update_user_game_stats(player1_username, False)
+            user_service.update_user_game_stats(player2_username, False)
 
 
 
