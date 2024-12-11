@@ -116,6 +116,9 @@ pipenv install --dev
 # Initiate the virtual environment
 pipenv shell
 
+# Start postgres
+brew services start postgres
+
 # Run the server
 make dev
 ```
