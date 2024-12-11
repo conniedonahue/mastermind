@@ -206,6 +206,13 @@ I added a User Database to keep track of User's gamme history. It currently has 
 
 The database is updated at two points (synchronously): upon entering a game and when the session status changes from `"active"`.
 
+### Heroku Deployment
+
+I've deployed this application on Heroku, available here:
+`https://connor-donahue-mastermind-5f53191544e3.herokuapp.com/`
+
+I also used Heroku's built-in Postgres database for the User Database.
+
 ## Production Readiness Checklist
 
 ### 🔒 Security
