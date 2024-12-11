@@ -5,7 +5,6 @@ import os
 from .config import DevelopmentConfig, ProductionConfig, TestingConfig
 from .db.user_db.manager import DatabaseManager
 from .db.user_db.service import UserService
-from .db.user_db.update_queue import UserStatUpdateQueue
 from .db.user_db.models import Base
 import logging
 import asyncio
@@ -18,27 +17,14 @@ def init_components(app):
     if not db_url:
         raise ValueError("No database URL configured! Check your environment variables.")
     
-    # Initialize DB manager and Queue synchronously
+    # Initialize DB manager
     db_manager = DatabaseManager(db_url)
     db_manager.init_db()
-    update_queue = UserStatUpdateQueue(db_manager)
     
     # Store components in app context
     app.db_manager = db_manager
     app.user_service = UserService(app.db_manager)
-    app.update_queue = update_queue
-    logger.info("Synchronous database components initialized successfully")
-
-def cleanup_components(app):
-    """
-    Cleanup  components on shutdown
-    
-    If the update_queue exists, this shuts down any workers
-    """
-    if hasattr(app, 'update_queue'):
-        app.update_queue.stop()
-        logger.info("Synchronous components cleaned up successfully")
-
+    logger.info("Database components initialized successfully")
 
 def create_app():
     app = Flask(__name__)
@@ -65,16 +51,11 @@ def create_app():
 
     init_components(app)
 
-    @app.teardown_appcontext
-    def shutdown_sync(exception=None):
-        cleanup_components(app)
-
     @app.shell_context_processor
     def make_shell_context():
         return {
             'app': app,
             'db_manager': app.db_manager,
-            'update_queue': app.update_queue
         }
 
     return app
