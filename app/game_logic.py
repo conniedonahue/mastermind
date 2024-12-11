@@ -92,7 +92,7 @@ def check_win_lose_conditions(correct_numbers, correct_positions, session_data, 
             status = f"{player}_wins_{other_player}_loses"
             logger.info("Player %s wins, status set to %s", player, status)
             user_service.update_user_game_stats(session_data['config']['player_info'][player]['username'], True)
-            user_service.update_user_game_stats(session_data['config']['player_info'][other_player]['username'], True)
+            user_service.update_user_game_stats(session_data['config']['player_info'][other_player]['username'], False)
 
             
         
