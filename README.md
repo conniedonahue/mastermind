@@ -1,35 +1,65 @@
-# File Compare API
+# Mastermind
 
 ## Docker instructions
 
 Prerequisites:
+
 - Docker and Docker Compose installed on your machine
 - Git installed on your machine
 
-To run this application in Docker, do the following:
+### Development Environment
 
-1. _Clone this repo:_  Open a Terminal and change the current working directory to where you'd like the cloned repository to be stored. Use following git command: `git clone https://github.com/conniedonahue/mastermind.git`.
+1. _Clone this repo:_ Open a Terminal and change the current working directory to where you'd like the cloned repository to be stored. Use following git command: `git clone https://github.com/conniedonahue/mastermind.git`.
 2. _Enter the directory in your terminal:_ `cd mastermind`
 3. _Start the Dev Server:_ `docker-compose up` Note:
 4. _Access the Application:_ After running the `docker-compose` command, open up your browser to `http://localhost:5001`
 
-5. _Access the User Databse:_ 
-  - through Docker's psql: `docker-compose exec db psql -U user -d dev_db`
-  - or through your local psql: `psql -h localhost -p 5432 -U user -d dev_db`
+5. _Access the User Databse:_
 
-   Some helpful Docker commands while using the app:
+- through Docker's psql: `docker-compose exec db psql -U user -d dev_db`
+- or through your local psql: `psql -h localhost -p 5432 -U user -d dev_db`
 
-   To close the docker server: `docker-compose down`
-   To view logs: `docker-compose logs`
-   To continously follow the logs: `docker-compose logs -f`
-   To see all Docker container-ids: `docker ps`
-   To create database backup: `docker-compose exec db pg_dump -U user dev_db > backup.sql`
-   To restore database: `docker-compose exec -T db psql -U user dev_db < backup.sql`
+Some helpful Docker commands while using the app:
 
-## Production Environment
-In a real life deployment, I would ask you to 
+To close the docker server: `docker-compose down`
+To view logs: `docker-compose logs`
+To continously follow the logs: `docker-compose logs -f`
+To see all Docker container-ids: `docker ps`
+To create database backup: `docker-compose exec db pg_dump -U user dev_db > backup.sql`
+To restore database: `docker-compose exec -T db psql -U user dev_db < backup.sql`
 
+### Production Environment
 
+In a real life deployment, I would ask you to create your own .env files by running these commands:
+
+```
+cp .env.development.example .env.development
+cp .env.production.example .env.production
+```
+
+and then edit the files with the correct secret information. For ease of turnover for this project, I amd using dummy environmental variables in my docker-compose.prod.yml. It will load up a production server, but it won't connect you to my Heroku deployed server and postgress database (more on that below).
+
+To access the production server, complete steps 1-2 above, and then:
+
+1. _Start the Production Server:_ `docker-compose -f docker-compose.prod.yml up --build`
+2. _Access the Application:_ After running the `docker-compose` command, open up your browser to `http://localhost:8000`
+3. _Access the User Databse:_
+
+- through Docker's psql: `docker-compose exec db psql -U user -d prod_db`
+- or through your local psql: `psql -h localhost -p 5432 -U user -d prod_db`
+
+### Troubleshooting:
+
+- Port Conflicts
+
+  - Make sure no other services are using ports 5001, 8000, or 5432
+    - If they are, change the left side of the port mapping in the docker-compose.yml files. e.g. ports: "5001:5000" -> "5011:5000"
+  - Stop local PostgreSQL if running: e.g. `brew services stop postgresql`
+
+- Database Connection Issues
+  - Verify the database container is running: docker-compose ps
+  - Check database logs: docker-compose logs db
+  - Ensure environment variables are correctly set
 
 ## Node instructions
 
@@ -43,44 +73,65 @@ To run this server locally using Node, do the following:
 ## Design considerations
 
 Here is an early sketch of the system design.
-![System-Design](./assets/images/SiddekoTakeHome.jpg)
+![System-Design](./assets/images/early-system-sketch.png)
 
 ### Functional Requirements
 
-- Compare differences of two files
-- Possible extensions:
-  - .md
-  - .py
-  - .ts
-  - .pdf
-- Provide data structure that allows users to parse differences
+- Can be played by user against computer
+- Secret Code must be pulled from Random generator API
+- Default rules:
+  - Player must guess a four digit number (0-7)
+  - Player has 10 Attempts
+  - Game provides feedback at the end of the turn
+    - number of correct numbers and number of correct positions
+- User Interface:
+  - Ability to guess the combinations of 4 numbers
+  - Ability to view the history of guesses and their feedback
+  - The number of guesses remaining is displayed
+  - NOTE: UI will be bare-bones since this is a backend review
 
 ### Nonfunctional Requirements
 
-- Scalable for high-traffic use, assuming:
+- Prioritize availability over consistency:
 
-  - initially scale to 1M requests (2M files) / day
-  - est size: text = 1MB/file, PDF = 5MB/file
-  - est 20% of requests are for PDFs
-  - (2M _ .2 _ 5MB) + (2M _ .8 _ 1MB) = 3.6TB/day
-  - 10% LRU Cache?
-    - .10 \* 2TB = 200GB for PDFs
-    - .10 \* 1.6TB = 160GB for text
-    - This seems too large, so let's try 1%.
+  - we want fast response times (no waiting for global syncs, session-based data)
+  - fault tolerance if a node goes down
+  - game is casual and simple enough to allow for some inconsistencies to score etc.
+  - Multiplayer (extension) will highlight this trade-off
 
-- Idempodent, consistent results
-- PDF ingest: consistent, no partial results
-- Ideally as low latency (under 500ms) as possible
-- Out of Scope: User Authentication
+- Low latency (<300 msec)
+
+  - websockets for multiplayer???
+
+- Scalable to 1M active sessions
+
+  - Example Default Session Size = 248 bytes
+
+    - Player 1 ID: 16 bytes
+    - Player 2 ID: 16 bytes
+    - Codeword: 4 digits × 4 bytes = 16 bytes
+    - Past Guesses: 10 guesses × 4 digits × 4 bytes = 160 bytes
+
+    Session Metadata:
+
+    - Start/End Time: 16 bytes
+      Game Result: ~8 bytes (string/enum??)
+      Settings: ~16 bytes (custom settings as JSON)
+      Session ID: 16 bytes
+
+  - 1M active sessions = 248 MB for cache
+
+### Core Entities
+
+- Sessions
+- Users (players)
 
 ### Data Flow
 
-- Validate files
-- Check cache for parsed file
-- Parse data into string (if not in cache)
-- Compare files line by line, populating output object
-- Store parsed files in Cache
-- Return output object
+- User logs in
+- Adjust settings (extensions)
+- Start (game) session
+- Results -> Database
 
 ### Express Backend
 
