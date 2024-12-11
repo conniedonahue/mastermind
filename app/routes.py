@@ -29,7 +29,7 @@ def create_game():
             username=config['player_info']['player1']['username']
         )
         config['player_info']['player1']['user_id'] = user_id
-        config['code'] = [0,0,0,0]
+        config['code'] = generate_code(config['code_length'])
 
         logger.debug("Game config:  %s", config)
 
