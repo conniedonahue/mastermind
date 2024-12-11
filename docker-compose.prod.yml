@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=production
+      - SQLALCHEMY_DATABASE_URI=postgresql://user:password@db:5432/prod_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=your_redis_password_here
+    command: ["gunicorn", "--bind", "0.0.0.0:8000", "run:app"]
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=prod_db
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    command: redis-server --requirepass your_redis_password_here
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data_prod:
+  redis_data:
