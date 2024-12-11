@@ -8,12 +8,14 @@ services:
     ports:
       - "8000:8000"
     environment:
+      # For a real life deployment, this would point ot the .env.production file
       - FLASK_APP=run.py
       - FLASK_ENV=production
       - SQLALCHEMY_DATABASE_URI=postgresql://user:password@db:5432/prod_db
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=your_redis_password_here
+      - SECRET_KEY=your_secret_key_here
     command: ["gunicorn", "--bind", "0.0.0.0:8000", "run:app"]
     depends_on:
       - db

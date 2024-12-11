@@ -1,0 +1,245 @@
+openapi: 3.0.3
+info:
+  title: Mastermind Game API
+  description: API specification for a Mastermind game with single and multiplayer modes
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5001
+    description: Development server
+  - url: http://localhost:8000
+    description: Production server local
+  - url: https://connor-donahue-mastermind-5f53191544e3.herokuapp.com
+    description: Production server (Heroku)
+
+security: []
+
+components:
+  schemas:
+    GameState:
+      type: object
+      properties:
+        player1:
+          $ref: "#/components/schemas/Player"
+        player2:
+          $ref: "#/components/schemas/Player"
+        status:
+          type: string
+          enum: [active, active_waiting won, lost]
+
+    Player:
+      type: object
+      properties:
+        username:
+          type: string
+        remaining_guesses:
+          type: integer
+        guesses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Guess"
+
+    Guess:
+      type: object
+      properties:
+        guess:
+          type: string
+        correct_numbers:
+          type: integer
+        correct_positions:
+          type: integer
+
+paths:
+  /:
+    get:
+      operationId: getHomePage
+      summary: Home page
+      description: Serves the welcome page
+      responses:
+        200:
+          description: Welcome page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        404:
+          description: Page not found
+
+  /game:
+    post:
+      operationId: createGame
+      summary: Create new game
+      description: Creates a new game session with specified configuration
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Username for player 1
+                allowed_attempts:
+                  type: integer
+                  default: 10
+                  description: Number of allowed attempts
+                code_length:
+                  type: integer
+                  default: 4
+                  description: Length of the secret code
+                wordleify:
+                  type: boolean
+                  description: Enable Wordle-like features
+                multiplayer:
+                  type: boolean
+                  description: Enable multiplayer mode
+      responses:
+        201:
+          description: Game created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  session_id:
+                    type: string
+                  join_link:
+                    type: string
+                    nullable: true
+                  session_state:
+                    $ref: "#/components/schemas/GameState"
+        400:
+          description: Invalid request parameters
+        500:
+          description: Server error creating game
+
+  /game/{session_id}:
+    parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    get:
+      operationId: getGamePage
+      summary: Get game page
+      responses:
+        200:
+          description: Game page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        404:
+          description: Session not found
+
+    post:
+      operationId: makeGuess
+      summary: Make a guess
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                guess:
+                  type: string
+                  description: Player's guess
+                player:
+                  type: string
+                  default: player1
+                  enum: [player1, player2]
+      responses:
+        200:
+          description: Guess evaluated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    $ref: "#/components/schemas/GameState"
+        400:
+          description: Invalid guess
+        404:
+          description: Session not found
+
+  /game/state/{session_id}:
+    get:
+      operationId: getGameState
+      summary: Get game state
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Current game state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  game_state:
+                    $ref: "#/components/schemas/GameState"
+        404:
+          description: Session not found
+
+  /game/multiplayer/join/{session_id}:
+    parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    get:
+      operationId: getJoinPage
+      summary: Get join game page
+      responses:
+        200:
+          description: Join game page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        404:
+          description: Session not found
+
+    post:
+      operationId: joinGame
+      summary: Join multiplayer game
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                player2_name:
+                  type: string
+                  default: Player 2
+      responses:
+        200:
+          description: Joined game successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Game is full
+        404:
+          description: Game not found or not multiplayer
