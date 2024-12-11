@@ -98,12 +98,15 @@ def check_win_lose_conditions(correct_numbers, correct_positions, session_data, 
 
 
     else:
+        username = session_data['config']['player_info']['player1']['username']
         if correct_positions == len(session_data['config']['code']):
             status = 'won'
             logger.info("Singleplayer mode: player %s wins", player)
+            user_service.update_user_game_stats(username, True)
 
         if session_data['state']['player1']['remaining_guesses'] <= 0:
             status = 'lost'
             logger.info("Singleplayer mode: player %s loses", player)
+            user_service.update_user_game_stats(username, False)
     
     return status

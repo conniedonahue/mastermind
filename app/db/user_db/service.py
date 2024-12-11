@@ -20,7 +20,7 @@ class UserService:
             logger.info("Database connection is successful.")
             return True
         except OperationalError as e:
-            logger.error(f"Database connection failed: {e}")
+            logger.error("Database connection failed: %s", e)
             return False
 
     def get_user_by_username(self, username: str) -> User:
@@ -44,6 +44,7 @@ class UserService:
     def update_user_game_stats(self, username: str, won: bool) -> None:
         """Update a user's game statistics synchronously"""
         with self.db_manager.get_session() as session:
+            logger.info("Attempting to update stats for user %s", username)
             try:
                 stmt = select(User).where(User.username == username)
                 result = session.execute(stmt)
@@ -52,10 +53,10 @@ class UserService:
                 if user:
                     user.update_game_stats(won)
                     session.commit()
-                    logger.info("Updated stats for user %s", username)
+                    logger.info("Successfully updated stats for user %s", username)
             except Exception as e:
                 session.rollback()
-                logger.error("Error updating user stats: %s", e)
+                logger.error("Error updating stats for %s: %s", username, e)
 
     def create_or_get_user(self, username: str) -> int:
         """
